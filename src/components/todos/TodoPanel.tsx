@@ -114,9 +114,9 @@ export default function TodoPanel() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-2xl border border-gray-200 overflow-hidden">
+    <div className="flex flex-col h-full rounded-2xl border overflow-hidden bg-[var(--surface)] border-[var(--border)]">
       {/* 패널 헤더 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] flex-shrink-0">
         <div>
           <h2 className="font-serif text-base">할 일</h2>
           {remaining > 0 && (
@@ -187,12 +187,12 @@ export default function TodoPanel() {
                       className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl border transition-all cursor-pointer group
                         ${
                           draggingId === todo.id
-                            ? "opacity-40 scale-95 border-gray-300"
+                            ? "opacity-40 scale-95 border-[var(--border)]"
                             : overId === todo.id
-                            ? "border-[#1A1714] bg-gray-50 scale-[1.01]"
+                            ? "border-[var(--accent)] bg-[var(--border-subtle)] scale-[1.01]"
                             : todo.is_done
-                            ? "bg-gray-50 border-gray-100 opacity-60"
-                            : "bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                            ? "bg-[var(--border-subtle)] border-[var(--border-subtle)] opacity-60"
+                            : "bg-[var(--surface)] border-[var(--border)] hover:border-[var(--text-muted)] hover:shadow-sm"
                         }`}
                       onClick={() => openEdit(todo)}
                     >

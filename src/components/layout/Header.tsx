@@ -53,10 +53,12 @@ export default function Header({
   })();
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-14 bg-[#F7F5F0] border-b border-gray-200 flex items-center px-4 gap-2 z-30">
+    <header
+      className="fixed top-0 left-0 right-0 h-14 border-b border-[var(--border)] flex items-center px-4 gap-2 z-30 bg-[var(--bg)]"
+    >
       <button
         onClick={onMenuClick}
-        className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors flex-shrink-0"
+        className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
       >
         <Menu size={20} />
       </button>
@@ -79,13 +81,13 @@ export default function Header({
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <button
               onClick={() => navigate(-1)}
-              className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500"
+              className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500"
             >
               <ChevronLeft size={18} />
             </button>
             <button
               onClick={() => navigate(1)}
-              className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500"
+              className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500"
             >
               <ChevronRight size={18} />
             </button>

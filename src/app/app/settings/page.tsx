@@ -2,19 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import { LogOut } from "lucide-react";
-import { useFontSize, type FontSize } from "@/hooks/useFontSize";
+import { LogOut, Sun, Moon, Monitor } from "lucide-react";
+import { useThemeStore } from "@/store/themeStore";
 
-const FONT_SIZE_LABELS: Record<FontSize, string> = {
-  small: "소",
-  medium: "중",
-  large: "대",
-};
+type Theme = "light" | "dark" | "system";
+
+const THEME_OPTIONS: { value: Theme; label: string; icon: React.ReactNode }[] =
+  [
+    { value: "light", label: "라이트", icon: <Sun size={16} /> },
+    { value: "dark", label: "다크", icon: <Moon size={16} /> },
+    { value: "system", label: "시스템", icon: <Monitor size={16} /> },
+  ];
 
 export default function SettingsPage() {
   const router = useRouter();
   const supabase = createClient();
-  const [fontSize, setFontSize] = useFontSize();
+  const { theme, setTheme } = useThemeStore();
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -24,33 +27,50 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-md mx-auto px-4 py-6">
-      <h2 className="font-serif text-2xl mb-6">설정</h2>
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        {/* 글씨 크기 */}
-        <div className="px-5 py-4 border-b border-gray-100">
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">
-            글씨 크기
+      <h2 className="font-serif text-2xl mb-6 text-[var(--text)]">
+        설정
+      </h2>
+
+      {/* 테마 설정 */}
+      <div
+        className="rounded-2xl border overflow-hidden mb-4 bg-[var(--surface)] border-[var(--border)]"
+      >
+        <div
+          className="px-5 py-3 border-b border-[var(--border)]"
+        >
+          <p
+            className="text-xs font-bold uppercase tracking-widest text-[#8A847C]"
+          >
+            테마
           </p>
-          <div className="flex gap-2">
-            {(["small", "medium", "large"] as const).map((size) => (
+        </div>
+        <div className="p-4">
+          <div className="grid grid-cols-3 gap-2">
+            {THEME_OPTIONS.map((opt) => (
               <button
-                key={size}
-                onClick={() => setFontSize(size)}
-                className={`flex-1 py-2 rounded-xl border text-sm font-semibold transition-colors
-                  ${fontSize === size
-                    ? "border-gray-800 bg-gray-800 text-white"
-                    : "border-gray-200 bg-[#F7F5F0] text-gray-600 hover:border-gray-400"}`}
+                key={opt.value}
+                onClick={() => setTheme(opt.value)}
+                className={`flex flex-col items-center gap-2 py-3 rounded-xl border-2 text-xs font-semibold transition-all text-[var(--text)] ${
+                  theme === opt.value
+                    ? "border-[var(--accent)] bg-[var(--bg)]"
+                    : "border-[var(--border)] bg-transparent"
+                }`}
               >
-                {FONT_SIZE_LABELS[size]}
+                {opt.icon}
+                {opt.label}
               </button>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* 로그아웃 */}
+      {/* 로그아웃 */}
+      <div
+        className="rounded-2xl border overflow-hidden bg-[var(--surface)] border-[var(--border)]"
+      >
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-5 py-4 text-red-500 hover:bg-red-50 transition-colors text-sm font-semibold"
+          className="w-full flex items-center gap-3 px-5 py-4 text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors text-sm font-semibold"
         >
           <LogOut size={16} />
           로그아웃

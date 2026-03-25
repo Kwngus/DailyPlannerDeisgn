@@ -42,7 +42,7 @@ export default function SignupPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen bg-[#F7F5F0] flex items-center justify-center px-4">
+      <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--bg)]">
         <div className="text-center">
           <div className="text-4xl mb-4">📬</div>
           <h2 className="text-xl font-semibold mb-2">이메일을 확인해주세요</h2>
@@ -63,7 +63,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F5F0] flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--bg)]">
       <div className="w-full max-w-sm">
         <h1 className="text-3xl font-serif text-center mb-2 tracking-tight">
           ✦ Planner
@@ -74,7 +74,7 @@ export default function SignupPage() {
 
         <form
           onSubmit={handleSignup}
-          className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm space-y-4"
+          className="rounded-2xl border p-8 shadow-sm space-y-4 bg-[var(--surface)] border-[var(--border)]"
         >
           <div>
             <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
@@ -86,7 +86,7 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="hello@example.com"
               required
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-[#F7F5F0] text-sm outline-none focus:border-gray-800 transition-colors"
+              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
             />
           </div>
 
@@ -100,7 +100,7 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="6자 이상"
               required
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-[#F7F5F0] text-sm outline-none focus:border-gray-800 transition-colors"
+              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
             />
           </div>
 
@@ -114,7 +114,7 @@ export default function SignupPage() {
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-[#F7F5F0] text-sm outline-none focus:border-gray-800 transition-colors"
+              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
             />
           </div>
 

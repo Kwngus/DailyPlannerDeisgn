@@ -28,8 +28,7 @@ const PRIORITIES: { value: Priority; label: string; color: string }[] = [
 ];
 
 const INPUT_CLS =
-  "w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-[#F7F5F0] " +
-  "text-sm outline-none focus:border-gray-800 transition-colors";
+  "w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors";
 
 export default function TodoModal({
   isOpen,
@@ -84,10 +83,10 @@ export default function TodoModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.22s_cubic-bezier(0.34,1.56,0.64,1)]">
+      <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.22s_cubic-bezier(0.34,1.56,0.64,1)] bg-[var(--surface)]">
 
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)]">
           <h2 className="font-serif text-xl">
             {isEditing ? "할 일 수정" : "할 일 추가"}
           </h2>
@@ -123,7 +122,7 @@ export default function TodoModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="무엇을 해야 하나요?"
               autoFocus
-              className={INPUT_CLS}
+              className={INPUT_CLS + " bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"}
             />
           </div>
 
@@ -155,7 +154,7 @@ export default function TodoModal({
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className={INPUT_CLS}
+              className={INPUT_CLS + " bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"}
             />
           </div>
 
@@ -198,7 +197,7 @@ export default function TodoModal({
               onChange={(e) => setMemo(e.target.value)}
               placeholder="추가 내용..."
               rows={3}
-              className={INPUT_CLS + " resize-none"}
+              className={INPUT_CLS + " resize-none bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"}
             />
           </div>
 
@@ -206,7 +205,7 @@ export default function TodoModal({
         </div>
 
         {/* 푸터 */}
-        <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+        <div className="px-6 py-4 border-t border-[var(--border-subtle)] flex gap-3">
           <button
             onClick={onClose}
             className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold

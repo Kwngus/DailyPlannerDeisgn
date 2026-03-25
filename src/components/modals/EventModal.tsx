@@ -103,9 +103,9 @@ export default function EventModal({
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.22s_cubic-bezier(0.34,1.56,0.64,1)]">
+      <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.22s_cubic-bezier(0.34,1.56,0.64,1)] bg-[var(--surface)]">
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)]">
           <h2 className="font-serif text-xl">
             {editingEvent ? "일정 수정" : "일정 추가"}
           </h2>
@@ -173,7 +173,7 @@ export default function EventModal({
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="무엇을 할 예정인가요?"
                   autoFocus
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-[#F7F5F0] text-sm outline-none focus:border-gray-800 transition-colors"
+                  className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
                 />
               </div>
 
@@ -187,7 +187,7 @@ export default function EventModal({
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-[#F7F5F0] text-sm outline-none focus:border-gray-800 transition-colors"
+                    className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
                   />
                 </div>
                 <div>
@@ -198,7 +198,7 @@ export default function EventModal({
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-[#F7F5F0] text-sm outline-none focus:border-gray-800 transition-colors"
+                    className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
                   />
                 </div>
                 <div>
@@ -209,7 +209,7 @@ export default function EventModal({
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-[#F7F5F0] text-sm outline-none focus:border-gray-800 transition-colors"
+                    className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
                   />
                 </div>
               </div>
@@ -247,7 +247,7 @@ export default function EventModal({
                       value={recurrenceEnd}
                       onChange={(e) => setRecurrenceEnd(e.target.value)}
                       min={date}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-[#F7F5F0] text-sm outline-none focus:border-gray-800 transition-colors"
+                      className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
                     />
                   </div>
                 )}
@@ -288,7 +288,7 @@ export default function EventModal({
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="내용 (선택사항)"
                   rows={2}
-                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-[#F7F5F0] text-sm outline-none focus:border-gray-800 transition-colors resize-none"
+                  className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors resize-none bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
                 />
               </div>
 
@@ -298,7 +298,7 @@ export default function EventModal({
             </div>
 
             {/* 푸터 */}
-            <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+            <div className="px-6 py-4 border-t border-[var(--border-subtle)] flex gap-3">
               <button
                 onClick={onClose}
                 className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-400 hover:text-gray-700 hover:border-gray-400 transition-colors"

@@ -17,15 +17,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F5F0]">
+    <div className="min-h-screen bg-[var(--bg)]">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Header
         onMenuClick={() => setSidebarOpen(true)}
         onSearchClick={() => setSearchOpen(true)}
       />
-      <main className="pt-14">
-        {children}
-      </main>
+      <main className="pt-14">{children}</main>
       <ToastContainer />
       <SearchModal
         isOpen={searchOpen}
@@ -33,5 +31,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         onEventClick={handleEventClick}
       />
     </div>
-  )
+  );
 }

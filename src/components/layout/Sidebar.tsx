@@ -42,10 +42,11 @@ export default function Sidebar({ isOpen, onClose }: Props) {
       {/* 사이드바 */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-56 bg-[#1A1714] text-[#F7F5F0]
-          flex flex-col z-50
+          fixed top-0 left-0 h-full w-56 z-50
+          flex flex-col
           transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          bg-[#1A1714] dark:bg-[#F0EDE8] text-[#F7F5F0] dark:text-[#1A1714]
         `}
       >
         {/* 로고 + 닫기 */}
@@ -53,7 +54,7 @@ export default function Sidebar({ isOpen, onClose }: Props) {
           <span className="font-serif text-xl tracking-wide">✦ Planner</span>
           <button
             onClick={onClose}
-            className="text-white/50 hover:text-white transition-colors"
+            className="text-white/50 hover:text-white dark:text-[#1A1714]/50 dark:hover:text-[#1A1714] transition-colors"
           >
             <X size={18} />
           </button>
@@ -73,8 +74,8 @@ export default function Sidebar({ isOpen, onClose }: Props) {
                   transition-colors
                   ${
                     isActive
-                      ? "text-white bg-white/10"
-                      : "text-white/60 hover:text-white hover:bg-white/5"
+                      ? "text-white bg-white/10 dark:text-[#1A1714] dark:bg-[#1A1714]/10"
+                      : "text-white/60 hover:text-white hover:bg-white/5 dark:text-[#1A1714]/60 dark:hover:text-[#1A1714] dark:hover:bg-[#1A1714]/5"
                   }
                 `}
               >
@@ -89,7 +90,7 @@ export default function Sidebar({ isOpen, onClose }: Props) {
         <div className="px-6 py-5 border-t border-white/10">
           <button
             onClick={handleLogout}
-            className="w-full text-left text-sm text-white/40 hover:text-white/70 transition-colors"
+            className="w-full text-left text-sm text-white/40 hover:text-white/70 dark:text-[#1A1714]/40 dark:hover:text-[#1A1714]/70 transition-colors"
           >
             로그아웃
           </button>

@@ -68,9 +68,9 @@ export default function SearchModal({ isOpen, onClose, onEventClick }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start justify-center pt-16 px-4">
-      <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.2s_cubic-bezier(0.34,1.56,0.64,1)]">
+      <div className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.2s_cubic-bezier(0.34,1.56,0.64,1)] bg-[var(--surface)]">
         {/* 검색 입력 */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border-subtle)]">
           <Search size={18} className="text-gray-400 flex-shrink-0" />
           <input
             ref={inputRef}
@@ -84,7 +84,7 @@ export default function SearchModal({ isOpen, onClose, onEventClick }: Props) {
           )}
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+            className="p-1 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-[#2C2820] transition-colors flex-shrink-0"
           >
             <X size={16} />
           </button>
@@ -119,7 +119,7 @@ export default function SearchModal({ isOpen, onClose, onEventClick }: Props) {
                     <button
                       key={ev.id}
                       onClick={() => handleEventClick(ev)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-[#2C2820] transition-colors text-left"
                     >
                       {/* 분류 색상 점 */}
                       <div
@@ -156,7 +156,7 @@ export default function SearchModal({ isOpen, onClose, onEventClick }: Props) {
 
               {/* 구분선 */}
               {results.events.length > 0 && results.todos.length > 0 && (
-                <div className="border-t border-gray-100 my-1" />
+                <div className="border-t border-[var(--border-subtle)] my-1" />
               )}
 
               {/* 할 일 결과 */}
@@ -176,7 +176,7 @@ export default function SearchModal({ isOpen, onClose, onEventClick }: Props) {
                           ? handleTodoDateClick(todo.due_date)
                           : onClose()
                       }
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-[#2C2820] transition-colors text-left"
                     >
                       <div
                         className={`w-2.5 h-2.5 rounded-full flex-shrink-0 border-2 ${

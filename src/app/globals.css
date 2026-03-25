@@ -1,11 +1,16 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: "Pretendard", sans-serif;
-  --font-serif: "Pretendard", sans-serif;
-  --font-family-sans: "Pretendard", sans-serif;
-  --font-family-serif: "Pretendard", sans-serif;
+  --font-sans: "Pretendard";
+  --font-serif: "Pretendard";
+  --font-family-sans: "Pretendard";
+  --font-family-serif: "Pretendard";
+  --base-font-size: 1.125rem;
+
+  /* 다크모드 variant */
+  --color-*: initial;
 }
 
 :root {
@@ -23,4 +28,32 @@ html {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+/* 라이트 모드 — 기존 디자인 유지 */
+:root {
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --border: #E5E7EB;
+  --border-subtle: #F3F4F6;
+  --text: #1A1714;
+  --text-muted: #8A847C;
+  --accent: #1A1714;
+  --accent-fg: #F7F5F0;
+}
+
+/* 다크 모드 */
+.dark {
+  --bg: #1A1714;
+  --surface: #242018;
+  --border: #38342E;
+  --border-subtle: #2C2820;
+  --text: #F0EDE8;
+  --text-muted: #8A847C;
+  --accent: #F0EDE8;
+  --accent-fg: #1A1714;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
 }

@@ -54,9 +54,9 @@ export default function MonthView({ currentDate }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mx-4">
+    <div className="rounded-2xl border overflow-hidden mx-4 bg-[var(--surface)] border-[var(--border)]">
       {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 border-b-2 border-gray-200">
+      <div className="grid grid-cols-7 border-b-2 border-[var(--border)]">
         {DOW.map((d, i) => (
           <div
             key={d}
@@ -78,7 +78,7 @@ export default function MonthView({ currentDate }: Props) {
           {weeks.map((week, wi) => (
             <div
               key={wi}
-              className="grid grid-cols-7 border-b border-gray-100 last:border-b-0"
+              className="grid grid-cols-7 border-b border-[var(--border-subtle)] last:border-b-0"
             >
               {week.map((day) => {
                 const dateStr = day.format("YYYY-MM-DD");
@@ -100,9 +100,9 @@ export default function MonthView({ currentDate }: Props) {
                   <div
                     key={dateStr}
                     onClick={() => handleDayClick(dateStr)}
-                    className={`min-h-[100px] p-1.5 border-r border-gray-100 last:border-r-0 cursor-pointer
-                      transition-colors hover:bg-gray-50
-                      ${!isThisMonth ? "bg-gray-50/50" : ""}
+                    className={`min-h-[100px] p-1.5 border-r border-[var(--border-subtle)] last:border-r-0 cursor-pointer
+                      transition-colors hover:bg-gray-50 dark:hover:bg-[#2C2820]
+                      ${!isThisMonth ? "bg-gray-50/50 dark:bg-[#1A1714]/50" : ""}
                     `}
                   >
                     {/* 날짜 숫자 */}

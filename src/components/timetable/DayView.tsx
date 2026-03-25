@@ -27,15 +27,15 @@ export default function DayView({
   const notes = events.filter((e) => e.date === dateStr && e.is_note);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mx-4">
+    <div className="rounded-2xl border overflow-hidden mx-4 bg-[var(--surface)] border-[var(--border)]">
       {/* 날짜 헤더 */}
       <div
-        className="grid border-b-2 border-gray-200"
+        className="grid border-b-2 border-[var(--border)]"
         style={{ gridTemplateColumns: "52px 1fr" }}
       >
         <div />
         <div
-          className={`py-1.5 text-center border-l border-gray-200 ${isToday(dateStr) ? "bg-gray-50" : ""}`}
+          className={`py-1.5 text-center border-l border-[var(--border)] ${isToday(dateStr) ? "bg-gray-50 dark:bg-[#2C2820]" : ""}`}
         >
           <div className="text-[9px] font-bold tracking-widest text-gray-400 uppercase">
             {dayjs(dateStr).format("ddd")}
@@ -55,7 +55,7 @@ export default function DayView({
       {/* 시간 그리드 */}
       <div className="grid" style={{ gridTemplateColumns: "52px 1fr" }}>
         {/* 시간 라벨 */}
-        <div className="border-r border-gray-200">
+        <div className="border-r border-[var(--border)]">
           {HOURS.map((h) => (
             <div
               key={h}
@@ -75,7 +75,7 @@ export default function DayView({
             return (
               <div
                 key={h}
-                className="relative border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                className="relative border-b border-[var(--border-subtle)] hover:bg-gray-50 dark:hover:bg-[#2C2820] transition-colors cursor-pointer"
                 style={{ height: `${ROW_HEIGHT}px` }}
                 onClick={() => onCellClick(dateStr, h)}
               >
