@@ -52,8 +52,8 @@ export default function AppPage() {
     else await addEvent(payload);
   }
 
-  async function handleDelete() {
-    if (selectedEvent) await deleteEvent(selectedEvent.id);
+  async function handleDelete(deleteAll: boolean = false) {
+    if (selectedEvent) await deleteEvent(selectedEvent.id, deleteAll);
   }
 
   function renderTimetable() {
