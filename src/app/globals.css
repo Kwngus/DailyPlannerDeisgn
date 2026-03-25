@@ -1,0 +1,26 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard", sans-serif;
+  --font-serif: "Pretendard", sans-serif;
+  --font-family-sans: "Pretendard", sans-serif;
+  --font-family-serif: "Pretendard", sans-serif;
+}
+
+:root {
+  --base-font-size: 1.125rem;
+}
+
+html {
+  font-size: var(--base-font-size);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
