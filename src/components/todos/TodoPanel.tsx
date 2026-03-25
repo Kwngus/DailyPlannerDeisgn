@@ -16,6 +16,8 @@ import type { Todo, Priority } from "@/types";
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { useDragSort } from "@/lib/hooks/useDragSort";
+import { GripVertical } from "lucide-react";
 
 dayjs.extend(isSameOrBefore);
 dayjs.locale("ko");
@@ -82,7 +84,7 @@ function groupByDate(todos: Todo[]) {
 }
 
 export default function TodoPanel() {
-  const { todos, loading, addTodo, updateTodo, deleteTodo, toggleDone } =
+  const { todos, loading, addTodo, updateTodo, deleteTodo, toggleDone, reorderTodos } =
     useTodos();
   const { categories } = useCategories();
   const [modalOpen, setModalOpen] = useState(false);
@@ -90,6 +92,14 @@ export default function TodoPanel() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
     done: true,
   });
+
+  const {
+    draggingId, overId,
+    handleDragStart, handleDragOver,
+    handleDrop, handleDragEnd,
+    handleTouchStart, handleTouchMove, handleTouchEnd,
+  } = useDragSort(todos, reorderTodos);
+
 
   const groups = groupByDate(todos);
   const remaining = todos.filter((t) => !t.is_done).length;
@@ -165,14 +175,35 @@ export default function TodoPanel() {
                   {group.todos.map((todo) => (
                     <div
                       key={todo.id}
+                      data-todo-id={todo.id}
+                      draggable
+                      onDragStart={() => handleDragStart(todo)}
+                      onDragOver={(e) => handleDragOver(e, todo.id)}
+                      onDrop={() => handleDrop(todo.id)}
+                      onDragEnd={handleDragEnd}
+                      onTouchStart={(e) => handleTouchStart(e, todo)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
                       className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl border transition-all cursor-pointer group
                         ${
-                          todo.is_done
+                          draggingId === todo.id
+                            ? "opacity-40 scale-95 border-gray-300"
+                            : overId === todo.id
+                            ? "border-[#1A1714] bg-gray-50 scale-[1.01]"
+                            : todo.is_done
                             ? "bg-gray-50 border-gray-100 opacity-60"
                             : "bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm"
                         }`}
                       onClick={() => openEdit(todo)}
                     >
+                      {/* 드래그 핸들 */}
+                      <div
+                        className="mt-0.5 flex-shrink-0 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing"
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        <GripVertical size={14} />
+                      </div>
+
                       {/* 체크버튼 */}
                       <button
                         onClick={(e) => {
@@ -184,37 +215,24 @@ export default function TodoPanel() {
                         {todo.is_done ? (
                           <CheckCircle2 size={18} className="text-gray-400" />
                         ) : (
-                          <Circle
-                            size={18}
-                            className="text-gray-300 hover:text-gray-600"
-                          />
+                          <Circle size={18} className="text-gray-300 hover:text-gray-600" />
                         )}
                       </button>
 
                       {/* 내용 */}
                       <div className="flex-1 min-w-0">
-                        <p
-                          className={`text-sm font-medium leading-tight truncate
-                          ${todo.is_done ? "line-through text-gray-400" : "text-gray-800"}`}
-                        >
+                        <p className={`text-sm font-medium leading-tight truncate
+                          ${todo.is_done ? "line-through text-gray-400" : "text-gray-800"}`}>
                           {todo.title}
                         </p>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          {/* 마감일 */}
                           {todo.due_date && (
-                            <span
-                              className={`text-[10px] font-semibold
-                              ${
-                                todo.due_date < dayjs().format("YYYY-MM-DD") &&
-                                !todo.is_done
-                                  ? "text-red-500"
-                                  : "text-gray-400"
-                              }`}
-                            >
+                            <span className={`text-[10px] font-semibold
+                              ${todo.due_date < dayjs().format("YYYY-MM-DD") && !todo.is_done
+                                ? "text-red-500" : "text-gray-400"}`}>
                               {dayjs(todo.due_date).format("M/D")}
                             </span>
                           )}
-                          {/* 분류 */}
                           {todo.category && (
                             <span
                               className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
@@ -227,10 +245,7 @@ export default function TodoPanel() {
                       </div>
 
                       {/* 우선순위 */}
-                      <Flag
-                        size={13}
-                        className={`mt-0.5 flex-shrink-0 ${PRIORITY_COLOR[todo.priority]}`}
-                      />
+                      <Flag size={13} className={`mt-0.5 flex-shrink-0 ${PRIORITY_COLOR[todo.priority]}`} />
                     </div>
                   ))}
                 </div>

@@ -36,8 +36,9 @@ export type Todo = {
   category?: Category;
   title: string;
   memo: string | null;
-  due_date: string | null; // 'YYYY-MM-DD'
+  due_date: string | null;
   priority: Priority;
   is_done: boolean;
+  sort_order: number;
   created_at: string;
 };
