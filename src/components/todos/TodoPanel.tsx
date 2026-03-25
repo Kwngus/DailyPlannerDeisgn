@@ -129,7 +129,6 @@ export default function TodoPanel() {
           </div>
         ) : todos.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-2xl mb-2">✅</p>
             <p className="text-sm text-gray-400">할 일이 없어요!</p>
             <p className="text-xs text-gray-300 mt-1">
               + 버튼으로 추가해보세요

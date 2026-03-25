@@ -13,16 +13,21 @@ export type Event = {
   category?: Category;
   title: string;
   note: string | null;
-  date: string; // 'YYYY-MM-DD'
-  start_min: number; // 예: 540 = 09:00
-  end_min: number; // 예: 600 = 10:00
+  date: string;
+  start_min: number;
+  end_min: number;
   is_note: boolean;
+  recurrence_type: RecurrenceType;
+  recurrence_end_date: string | null;
+  recurrence_group_id: string | null;
   created_at: string;
 };
 
 export type ViewMode = "day" | "week" | "month";
 
 export type Priority = "high" | "medium" | "low";
+
+export type RecurrenceType = "none" | "daily" | "weekly" | "monthly";
 
 export type Todo = {
   id: string;
