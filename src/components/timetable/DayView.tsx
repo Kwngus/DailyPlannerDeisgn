@@ -1,50 +1,57 @@
-"use client";
+'use client';
 
-import { HOURS, ROW_HEIGHT, isToday, getSegmentsForHour, getNotesForHour } from "@/lib/timeUtils";
-import EventBlock from "./EventBlock";
-import NoteBlock from "./NoteBlock";
-import NowLine from "./NowLine";
-import type { Event } from "@/types";
-import dayjs from "dayjs";
-import "dayjs/locale/ko";
+import { useRef } from 'react';
+import { HOURS, ROW_HEIGHT, isToday, getSegmentsForHour, getNotesForHour } from '@/lib/timeUtils';
+import EventBlock from './EventBlock';
+import NoteBlock from './NoteBlock';
+import NowLine from './NowLine';
+import DragPreview from './DragPreview';
+import { useDragCreate } from '@/lib/hooks/useDragCreate';
+import type { Event } from '@/types';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
 
-dayjs.locale("ko");
+dayjs.locale('ko');
 
 type Props = {
   dateStr: string;
   events: Event[];
   onEventClick: (event: Event) => void;
   onCellClick: (dateStr: string, hour: number) => void;
+  onDragCreate?: (dateStr: string, startMin: number, endMin: number) => void;
 };
 
 export default function DayView({
-  dateStr,
-  events,
-  onEventClick,
-  onCellClick,
+  dateStr, events, onEventClick, onCellClick, onDragCreate,
 }: Props) {
   const regularEvents = events.filter((e) => e.date === dateStr && !e.is_note);
   const notes = events.filter((e) => e.date === dateStr && e.is_note);
+  const columnRef = useRef<HTMLDivElement>(null);
+
+  const { dragState, onMouseDown, onMouseMove, onMouseUp, onMouseLeave } =
+    useDragCreate((date, start, end) => {
+      onDragCreate?.(date, start, end);
+    });
 
   return (
     <div className="rounded-2xl border overflow-hidden mx-4 bg-[var(--surface)] border-[var(--border)]">
       {/* 날짜 헤더 */}
       <div
         className="grid border-b-2 border-[var(--border)]"
-        style={{ gridTemplateColumns: "52px 1fr" }}
+        style={{ gridTemplateColumns: '52px 1fr' }}
       >
         <div />
         <div
-          className={`py-1.5 text-center border-l border-[var(--border)] ${isToday(dateStr) ? "bg-gray-50 dark:bg-[#2C2820]" : ""}`}
+          className={`py-1.5 text-center border-l border-[var(--border)] ${isToday(dateStr) ? 'bg-gray-50 dark:bg-[#2C2820]' : ''}`}
         >
           <div className="text-[9px] font-bold tracking-widest text-gray-400 uppercase">
-            {dayjs(dateStr).format("ddd")}
+            {dayjs(dateStr).format('ddd')}
           </div>
           <div
             className={`text-base font-serif leading-tight mt-0.5 ${
               isToday(dateStr)
-                ? "w-6 h-6 bg-[#1A1714] text-white rounded-full flex items-center justify-center mx-auto text-xs"
-                : ""
+                ? 'w-6 h-6 bg-[#1A1714] text-white rounded-full flex items-center justify-center mx-auto text-xs'
+                : ''
             }`}
           >
             {dayjs(dateStr).date()}
@@ -53,7 +60,7 @@ export default function DayView({
       </div>
 
       {/* 시간 그리드 */}
-      <div className="grid" style={{ gridTemplateColumns: "52px 1fr" }}>
+      <div className="grid" style={{ gridTemplateColumns: '52px 1fr' }}>
         {/* 시간 라벨 */}
         <div className="border-r border-[var(--border)]">
           {HOURS.map((h) => (
@@ -62,22 +69,28 @@ export default function DayView({
               className="text-[10px] font-semibold text-gray-400 text-right pr-2 pt-1 tracking-wide"
               style={{ height: `${ROW_HEIGHT}px` }}
             >
-              {String(h).padStart(2, "0")}
+              {String(h).padStart(2, '0')}
             </div>
           ))}
         </div>
 
-        {/* 이벤트 컬럼: NowLine을 위한 relative 래퍼 */}
-        <div className="relative">
+        {/* 이벤트 컬럼 */}
+        <div
+          ref={columnRef}
+          className="relative select-none"
+          onMouseDown={(e) => columnRef.current && onMouseDown(e, dateStr, columnRef.current)}
+          onMouseMove={(e) => columnRef.current && onMouseMove(e, columnRef.current)}
+          onMouseUp={(e) => columnRef.current && onMouseUp(e, onCellClick, columnRef.current)}
+          onMouseLeave={onMouseLeave}
+        >
           {HOURS.map((h) => {
             const segs = getSegmentsForHour(regularEvents, h);
             const noteSegs = getNotesForHour(notes, h);
             return (
               <div
                 key={h}
-                className="relative border-b border-[var(--border-subtle)] hover:bg-gray-50 dark:hover:bg-[#2C2820] transition-colors cursor-pointer"
+                className="relative border-b border-[var(--border-subtle)] transition-colors cursor-crosshair"
                 style={{ height: `${ROW_HEIGHT}px` }}
-                onClick={() => onCellClick(dateStr, h)}
               >
                 {/* 10분 간격 세로선 */}
                 {[10, 20, 30, 40, 50].map((m) => (
@@ -86,8 +99,8 @@ export default function DayView({
                     className="absolute top-0 bottom-0 pointer-events-none"
                     style={{
                       left: `${(m / 60) * 100}%`,
-                      width: "1px",
-                      background: m === 30 ? "rgba(0,0,0,0.08)" : "rgba(0,0,0,0.04)",
+                      width: '1px',
+                      background: m === 30 ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.04)',
                     }}
                   />
                 ))}
@@ -113,8 +126,12 @@ export default function DayView({
             );
           })}
 
-          {/* NowLine: 외부 relative에 절대 위치 → 현재 시간 행의 정확한 위치 */}
           {isToday(dateStr) && <NowLine />}
+
+          {/* 드래그 프리뷰 */}
+          {dragState?.dateStr === dateStr && dragState.isCreating && (
+            <DragPreview dragState={dragState} />
+          )}
         </div>
       </div>
     </div>

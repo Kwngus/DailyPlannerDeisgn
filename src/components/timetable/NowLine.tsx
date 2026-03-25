@@ -1,33 +1,41 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getNowLinePos, ROW_HEIGHT } from "@/lib/timeUtils";
+import { ROW_HEIGHT, HOUR_START } from "@/lib/timeUtils";
+
+function calcTop(): number | null {
+  const now = new Date();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  // 02~04시는 표시 안 함
+  if (hour > 1 && hour < HOUR_START) return null;
+  const minutesSinceStart =
+    hour >= HOUR_START
+      ? (hour - HOUR_START) * 60 + minute
+      : (24 - HOUR_START + hour) * 60 + minute;
+  return (minutesSinceStart / 60) * ROW_HEIGHT;
+}
 
 export default function NowLine() {
-  const [pos, setPos] = useState(getNowLinePos());
+  const [topPx, setTopPx] = useState<number | null>(null);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPos(getNowLinePos());
-    }, 60000);
-    return () => clearInterval(interval);
+    setTopPx(calcTop());
+    const id = setInterval(() => setTopPx(calcTop()), 60_000);
+    return () => clearInterval(id);
   }, []);
 
-  if (!pos) return null;
+  if (topPx === null) return null;
 
   return (
     <div
-      className="absolute z-20 pointer-events-none"
-      style={{
-        top: `${pos.topPx + 3}px`,
-        height: `${ROW_HEIGHT - 6}px`,
-        left: `${pos.leftPct}%`,
-      }}
+      className="absolute left-0 right-0 z-10 pointer-events-none"
+      style={{ top: `${topPx}px` }}
     >
-      {/* 빨간 점 */}
-      <div className="absolute -top-1 -left-[3px] w-2 h-2 rounded-full bg-red-500" />
-      {/* 수직 선 */}
-      <div className="w-[1.5px] h-full bg-red-500" />
+      {/* 왼쪽 원형 점 */}
+      <div className="absolute w-2.5 h-2.5 rounded-full bg-red-500" style={{ top: '-5px', left: '-4px' }} />
+      {/* 수평선 */}
+      <div className="w-full h-[2px] bg-red-500" />
     </div>
   );
 }

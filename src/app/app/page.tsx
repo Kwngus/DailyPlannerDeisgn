@@ -31,6 +31,7 @@ export default function AppPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [defaultDate, setDefaultDate] = useState(currentDate);
   const [defaultHour, setDefaultHour] = useState<number | undefined>();
+  const [dragRange, setDragRange] = useState<{ startMin: number; endMin: number } | null>(null);
 
   const scrollRef = useScrollToNow(viewMode !== "month" && !loading);
 
@@ -38,6 +39,14 @@ export default function AppPage() {
     setSelectedEvent(null);
     setDefaultDate(dateStr);
     setDefaultHour(hour);
+    setModalOpen(true);
+  }
+
+  function openDragModal(dateStr: string, startMin: number, endMin: number) {
+    setSelectedEvent(null);
+    setDefaultDate(dateStr);
+    setDefaultHour(Math.floor(startMin / 60));
+    setDragRange({ startMin, endMin });
     setModalOpen(true);
   }
 
@@ -73,6 +82,7 @@ export default function AppPage() {
         events={events}
         onEventClick={openEditModal}
         onCellClick={openAddModal}
+        onDragCreate={openDragModal}
       />
     ) : (
       <WeekView
@@ -80,6 +90,7 @@ export default function AppPage() {
         events={events}
         onEventClick={openEditModal}
         onCellClick={openAddModal}
+        onDragCreate={openDragModal}
       />
     );
   }
@@ -116,12 +127,14 @@ export default function AppPage() {
 
       <EventModal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => { setModalOpen(false); setDragRange(null); }}
         onSave={handleSave}
         onDelete={selectedEvent ? handleDelete : undefined}
         categories={categories}
         defaultDate={defaultDate}
         defaultHour={defaultHour}
+        defaultStartMin={dragRange?.startMin}
+        defaultEndMin={dragRange?.endMin}
         editingEvent={selectedEvent}
       />
     </div>

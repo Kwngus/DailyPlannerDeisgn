@@ -1,4 +1,5 @@
 import type { Event } from "@/types";
+import dayjs from "dayjs";
 
 export const HOURS = [...Array.from({ length: 19 }, (_, i) => i + 5), 0, 1]; // 05~23, 00, 01
 export const HOUR_START = 5;
@@ -17,17 +18,15 @@ export function timeToMin(time: string): number {
 }
 
 export function getWeekDates(dateStr: string): string[] {
-  const date = new Date(dateStr);
-  const dow = date.getDay();
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(date);
-    d.setDate(date.getDate() - dow + i);
-    return d.toISOString().slice(0, 10);
-  });
+  const date = dayjs(dateStr);
+  const dow = date.day(); // 0=일, 6=토
+  return Array.from({ length: 7 }, (_, i) =>
+    date.subtract(dow, "day").add(i, "day").format("YYYY-MM-DD"),
+  );
 }
 
 export function isToday(dateStr: string): boolean {
-  return dateStr === new Date().toISOString().slice(0, 10);
+  return dateStr === dayjs().format("YYYY-MM-DD");
 }
 
 /** 이벤트를 시간 행(hour)별로 분할한 세그먼트를 반환 */
@@ -69,18 +68,3 @@ export function getNotesForHour(
     }));
 }
 
-/** 시간 → 행 인덱스 (05~23: 0~18, 00: 19, 01: 20) */
-function hourToRowIndex(hour: number): number {
-  return hour >= HOUR_START ? hour - HOUR_START : 24 - HOUR_START + hour;
-}
-
-/** NowLine 위치: 현재 시간 행의 top(px)과 분 위치(%) */
-export function getNowLinePos(): { topPx: number; leftPct: number } | null {
-  const now = new Date();
-  const hour = now.getHours();
-  if (hour > 1 && hour < HOUR_START) return null; // 02~04시는 표시 안 함
-  return {
-    topPx: hourToRowIndex(hour) * ROW_HEIGHT,
-    leftPct: (now.getMinutes() / 60) * 100,
-  };
-}

@@ -1,51 +1,58 @@
-"use client";
+'use client';
 
-import { HOURS, ROW_HEIGHT, getWeekDates, isToday, getSegmentsForHour, getNotesForHour } from "@/lib/timeUtils";
-import EventBlock from "./EventBlock";
-import NoteBlock from "./NoteBlock";
-import NowLine from "./NowLine";
-import type { Event } from "@/types";
-import dayjs from "dayjs";
-import "dayjs/locale/ko";
+import { useRef } from 'react';
+import { HOURS, ROW_HEIGHT, getWeekDates, isToday, getSegmentsForHour, getNotesForHour } from '@/lib/timeUtils';
+import EventBlock from './EventBlock';
+import NoteBlock from './NoteBlock';
+import NowLine from './NowLine';
+import DragPreview from './DragPreview';
+import { useDragCreate } from '@/lib/hooks/useDragCreate';
+import type { Event } from '@/types';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
 
-dayjs.locale("ko");
+dayjs.locale('ko');
 
 type Props = {
   currentDate: string;
   events: Event[];
   onEventClick: (event: Event) => void;
   onCellClick: (dateStr: string, hour: number) => void;
+  onDragCreate?: (dateStr: string, startMin: number, endMin: number) => void;
 };
 
 export default function WeekView({
-  currentDate,
-  events,
-  onEventClick,
-  onCellClick,
+  currentDate, events, onEventClick, onCellClick, onDragCreate,
 }: Props) {
   const weekDates = getWeekDates(currentDate);
+  const colRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const { dragState, onMouseDown, onMouseMove, onMouseUp, onMouseLeave } =
+    useDragCreate((date, start, end) => {
+      onDragCreate?.(date, start, end);
+    });
 
   return (
     <div className="rounded-2xl border overflow-hidden mx-4 bg-[var(--surface)] border-[var(--border)]">
       {/* 요일 헤더 */}
       <div
         className="grid border-b-2 border-[var(--border)]"
-        style={{ gridTemplateColumns: "52px repeat(7, 1fr)" }}
+        style={{ gridTemplateColumns: '52px repeat(7, 1fr)' }}
       >
         <div />
         {weekDates.map((dateStr) => (
           <div
             key={dateStr}
-            className={`py-1.5 text-center border-l border-[var(--border)] ${isToday(dateStr) ? "bg-gray-50 dark:bg-[#2C2820]" : ""}`}
+            className={`py-1.5 text-center border-l border-[var(--border)] ${isToday(dateStr) ? 'bg-gray-50 dark:bg-[#2C2820]' : ''}`}
           >
             <div className="text-[9px] font-bold tracking-widest text-gray-400 uppercase">
-              {dayjs(dateStr).format("ddd")}
+              {dayjs(dateStr).format('ddd')}
             </div>
             <div
               className={`text-sm font-serif leading-tight mt-0.5 ${
                 isToday(dateStr)
-                  ? "w-6 h-6 bg-[#1A1714] text-white rounded-full flex items-center justify-center mx-auto text-xs"
-                  : ""
+                  ? 'w-6 h-6 bg-[#1A1714] text-white rounded-full flex items-center justify-center mx-auto text-xs'
+                  : ''
               }`}
             >
               {dayjs(dateStr).date()}
@@ -55,10 +62,7 @@ export default function WeekView({
       </div>
 
       {/* 시간 그리드 */}
-      <div
-        className="grid"
-        style={{ gridTemplateColumns: "52px repeat(7, 1fr)" }}
-      >
+      <div className="grid" style={{ gridTemplateColumns: '52px repeat(7, 1fr)' }}>
         {/* 시간 라벨 */}
         <div className="border-r border-[var(--border)]">
           {HOURS.map((h) => (
@@ -67,26 +71,33 @@ export default function WeekView({
               className="text-[10px] font-semibold text-gray-400 text-right pr-2 pt-1 tracking-wide"
               style={{ height: `${ROW_HEIGHT}px` }}
             >
-              {String(h).padStart(2, "0")}
+              {String(h).padStart(2, '0')}
             </div>
           ))}
         </div>
 
         {/* 날짜별 컬럼 */}
-        {weekDates.map((dateStr) => {
+        {weekDates.map((dateStr, di) => {
           const dayEvents = events.filter((e) => e.date === dateStr && !e.is_note);
           const dayNotes = events.filter((e) => e.date === dateStr && e.is_note);
           return (
-            <div key={dateStr} className="relative border-l border-[var(--border)]">
+            <div
+              key={dateStr}
+              ref={(el) => { colRefs.current[di] = el; }}
+              className="relative border-l border-[var(--border)] select-none"
+              onMouseDown={(e) => colRefs.current[di] && onMouseDown(e, dateStr, colRefs.current[di]!)}
+              onMouseMove={(e) => colRefs.current[di] && onMouseMove(e, colRefs.current[di]!)}
+              onMouseUp={(e) => colRefs.current[di] && onMouseUp(e, onCellClick, colRefs.current[di]!)}
+              onMouseLeave={onMouseLeave}
+            >
               {HOURS.map((h) => {
                 const segs = getSegmentsForHour(dayEvents, h);
                 const noteSegs = getNotesForHour(dayNotes, h);
                 return (
                   <div
                     key={h}
-                    className="relative border-b border-[var(--border-subtle)] hover:bg-gray-50 dark:hover:bg-[#2C2820] transition-colors cursor-pointer"
+                    className="relative border-b border-[var(--border-subtle)] transition-colors cursor-crosshair"
                     style={{ height: `${ROW_HEIGHT}px` }}
-                    onClick={() => onCellClick(dateStr, h)}
                   >
                     {/* 10분 간격 세로선 */}
                     {[10, 20, 30, 40, 50].map((m) => (
@@ -95,8 +106,8 @@ export default function WeekView({
                         className="absolute top-0 bottom-0 pointer-events-none"
                         style={{
                           left: `${(m / 60) * 100}%`,
-                          width: "1px",
-                          background: m === 30 ? "rgba(0,0,0,0.08)" : "rgba(0,0,0,0.04)",
+                          width: '1px',
+                          background: m === 30 ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.04)',
                         }}
                       />
                     ))}
@@ -123,6 +134,11 @@ export default function WeekView({
               })}
 
               {isToday(dateStr) && <NowLine />}
+
+              {/* 드래그 프리뷰 */}
+              {dragState?.dateStr === dateStr && dragState.isCreating && (
+                <DragPreview dragState={dragState} />
+              )}
             </div>
           );
         })}

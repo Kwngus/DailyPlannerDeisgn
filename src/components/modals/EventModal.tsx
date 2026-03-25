@@ -14,6 +14,8 @@ type Props = {
   categories: Category[];
   defaultDate: string;
   defaultHour?: number;
+  defaultStartMin?: number;
+  defaultEndMin?: number; 
   editingEvent?: Event | null;
 };
 
@@ -32,6 +34,8 @@ export default function EventModal({
   categories,
   defaultDate,
   defaultHour,
+  defaultStartMin,
+  defaultEndMin,
   editingEvent,
 }: Props) {
   const [title, setTitle] = useState("");
@@ -61,9 +65,14 @@ export default function EventModal({
       setTitle("");
       setNote("");
       setDate(defaultDate);
-      const h = defaultHour ?? new Date().getHours();
-      setStartTime(`${String(h).padStart(2, "0")}:00`);
-      setEndTime(`${String(Math.min(h + 1, 23)).padStart(2, "0")}:00`);
+      if (defaultStartMin !== undefined && defaultEndMin !== undefined) {
+        setStartTime(minToTime(defaultStartMin));
+        setEndTime(minToTime(defaultEndMin));
+      } else {
+        const h = defaultHour ?? new Date().getHours();
+        setStartTime(`${String(h).padStart(2, "0")}:00`);
+        setEndTime(`${String(Math.min(h + 1, 23)).padStart(2, "0")}:00`);
+      }
       setCategoryId(categories[0]?.id ?? null);
       setIsNote(false);
       setRecurrence("none");
@@ -71,7 +80,7 @@ export default function EventModal({
     }
     setError(null);
     setShowDeleteConfirm(false);
-  }, [isOpen, editingEvent, defaultDate, defaultHour]);
+  }, [isOpen, editingEvent, defaultDate, defaultHour, defaultStartMin, defaultEndMin]);
 
   function handleSave() {
     if (!title.trim()) {
@@ -107,12 +116,19 @@ export default function EventModal({
         {/* 헤더 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)]">
           <h2 className="font-serif text-xl">
-            {editingEvent ? "일정 수정" : "일정 추가"}
+            {editingEvent ? (isNote ? "메모 수정" : "일정 수정") : (isNote ? "메모 추가" : "일정 추가")}
           </h2>
           <div className="flex items-center gap-2">
             {editingEvent && onDelete && !showDeleteConfirm && (
               <button
-                onClick={() => setShowDeleteConfirm(true)}
+                onClick={() => {
+                  if (editingEvent?.recurrence_group_id) {
+                    setShowDeleteConfirm(true);
+                  } else {
+                    onDelete?.(false);
+                    onClose();
+                  }
+                }}
                 className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <Trash2 size={16} />
@@ -162,6 +178,30 @@ export default function EventModal({
           <>
             {/* 바디 */}
             <div className="px-6 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+              {/* 타입 선택 */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsNote(false)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
+                    !isNote
+                      ? "border-gray-800 bg-gray-800 text-white"
+                      : "border-[var(--border)] text-gray-400 hover:border-gray-400"
+                  }`}
+                >
+                  일정
+                </button>
+                <button
+                  onClick={() => setIsNote(true)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
+                    isNote
+                      ? "border-gray-800 bg-gray-800 text-white"
+                      : "border-[var(--border)] text-gray-400 hover:border-gray-400"
+                  }`}
+                >
+                  메모
+                </button>
+              </div>
+
               {/* 제목 */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
