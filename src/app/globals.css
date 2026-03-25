@@ -38,6 +38,7 @@ html {
   --text: #1A1714;
   --text-muted: #8A847C;
   --accent: #1A1714;
+  --accent-hover: #3D3430;
   --accent-fg: #F7F5F0;
 }
 
@@ -50,6 +51,7 @@ html {
   --text: #F0EDE8;
   --text-muted: #8A847C;
   --accent: #F0EDE8;
+  --accent-hover: #D0CCC5;
   --accent-fg: #1A1714;
 }
 

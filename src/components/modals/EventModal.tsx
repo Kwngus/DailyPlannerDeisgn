@@ -184,7 +184,7 @@ export default function EventModal({
                   onClick={() => setIsNote(false)}
                   className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
                     !isNote
-                      ? "border-gray-800 bg-gray-800 text-white"
+                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
                       : "border-[var(--border)] text-gray-400 hover:border-gray-400"
                   }`}
                 >
@@ -194,7 +194,7 @@ export default function EventModal({
                   onClick={() => setIsNote(true)}
                   className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
                     isNote
-                      ? "border-gray-800 bg-gray-800 text-white"
+                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
                       : "border-[var(--border)] text-gray-400 hover:border-gray-400"
                   }`}
                 >
@@ -266,7 +266,7 @@ export default function EventModal({
                       onClick={() => setRecurrence(opt.value)}
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all ${
                         recurrence === opt.value
-                          ? "border-gray-800 bg-gray-800 text-white"
+                          ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
                           : "border-gray-200 text-gray-500 hover:border-gray-400"
                       }`}
                     >
@@ -347,7 +347,8 @@ export default function EventModal({
               </button>
               <button
                 onClick={handleSave}
-                className="flex-[2] py-2.5 rounded-xl bg-[#1A1714] text-white text-sm font-semibold hover:bg-[#3D3430] transition-colors"
+                className="flex-[2] py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
               >
                 저장
               </button>

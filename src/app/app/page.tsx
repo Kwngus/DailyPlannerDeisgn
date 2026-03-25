@@ -16,6 +16,7 @@ import TodoPanel from "@/components/todos/TodoPanel";
 import TodoPanelSkeleton from "@/components/todos/TodoPanelSkeleton";
 import Fab from "@/components/layout/Fab";
 import SwipeContainer from "@/components/ui/SwipeContainer";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import type { Event } from "@/types";
 import type { EventPayload } from "@/lib/hooks/useEvents";
 
@@ -109,15 +110,19 @@ export default function AppPage() {
         onSwipeRight={() => navigate(-1)}
         className="flex-1 min-w-0"
       >
-        <div ref={scrollRef} className="h-full overflow-y-auto">
-          {renderTimetable()}
-        </div>
+        <ErrorBoundary>
+          <div ref={scrollRef} className="h-full overflow-y-auto">
+            {renderTimetable()}
+          </div>
+        </ErrorBoundary>
       </SwipeContainer>
 
       {/* Todo 패널 */}
       {viewMode !== "month" && (
         <div className="hidden lg:flex flex-col w-72 flex-shrink-0">
-          {catLoading ? <TodoPanelSkeleton /> : <TodoPanel />}
+          <ErrorBoundary>
+            {catLoading ? <TodoPanelSkeleton /> : <TodoPanel />}
+          </ErrorBoundary>
         </div>
       )}
 

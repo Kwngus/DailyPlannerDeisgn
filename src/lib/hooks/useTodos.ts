@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
 import { useToastStore } from "@/store/toastStore";
+import { getErrorMessage } from "@/lib/handleError";
+import { useRealtimeTodos } from "./useRealtimeTodos";
 import type { Todo, Priority } from "@/types";
 
 export function useTodos() {
@@ -25,6 +27,13 @@ export function useTodos() {
     fetchTodos();
   }, [fetchTodos]);
 
+  // 실시간 동기화 — 다른 기기나 탭에서 변경 시 자동 반영
+  useRealtimeTodos({
+    onInsert: fetchTodos,
+    onUpdate: fetchTodos,
+    onDelete: fetchTodos,
+  });
+
   async function addTodo(payload: {
     title: string;
     memo: string;
@@ -46,7 +55,7 @@ export function useTodos() {
       sort_order: maxOrder + 1,
     });
     if (error) {
-      show("저장에 실패했어요.", "error");
+      show(getErrorMessage(error), "error");
       return;
     }
     show("할 일이 추가됐어요 ✓");
@@ -66,7 +75,7 @@ export function useTodos() {
   ) {
     const { error } = await supabase.from("todos").update(payload).eq("id", id);
     if (error) {
-      show("수정에 실패했어요.", "error");
+      show(getErrorMessage(error), "error");
       return;
     }
     if ("is_done" in payload) {
@@ -85,7 +94,7 @@ export function useTodos() {
     if (!target) return;
     const { error } = await supabase.from("todos").delete().eq("id", id);
     if (error) {
-      show("삭제에 실패했어요.", "error");
+      show(getErrorMessage(error), "error");
       return;
     }
     await fetchTodos();

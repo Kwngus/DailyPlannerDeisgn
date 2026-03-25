@@ -51,7 +51,7 @@ export default function WeekView({
             <div
               className={`text-sm font-serif leading-tight mt-0.5 ${
                 isToday(dateStr)
-                  ? 'w-6 h-6 bg-[#1A1714] text-white rounded-full flex items-center justify-center mx-auto text-xs'
+                  ? 'w-6 h-6 rounded-full flex items-center justify-center mx-auto text-xs [background:var(--accent)] [color:var(--accent-fg)]'
                   : ''
               }`}
             >

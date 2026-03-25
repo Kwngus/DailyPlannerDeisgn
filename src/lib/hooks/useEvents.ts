@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase";
 import { getWeekDates } from "@/lib/timeUtils";
 import { useToastStore } from "@/store/toastStore";
+import { getErrorMessage } from "@/lib/handleError";
+import { useRealtimeEvents } from "./useRealtimeEvents";
 import type { Event, ViewMode, RecurrenceType } from "@/types";
 import dayjs from "dayjs";
 
@@ -46,6 +48,13 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
     fetchEvents();
   }, [fetchEvents]);
 
+  // 실시간 동기화 — 다른 기기나 탭에서 변경 시 자동 반영
+  useRealtimeEvents({
+    onInsert: fetchEvents,
+    onUpdate: fetchEvents,
+    onDelete: fetchEvents,
+  });
+
   async function addEvent(payload: EventPayload) {
     const {
       data: { user },
@@ -78,7 +87,7 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
 
     const { error } = await supabase.from("events").insert(rows);
     if (error) {
-      show("저장에 실패했어요.", "error");
+      show(getErrorMessage(error), "error");
       return;
     }
 
@@ -104,7 +113,7 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
       })
       .eq("id", id);
     if (error) {
-      show("수정에 실패했어요.", "error");
+      show(getErrorMessage(error), "error");
       return;
     }
     show("일정이 수정됐어요 ✓");
@@ -122,14 +131,14 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
         .delete()
         .eq("recurrence_group_id", target.recurrence_group_id);
       if (error) {
-        show("삭제에 실패했어요.", "error");
+        show(getErrorMessage(error), "error");
         return;
       }
       show("반복 일정 전체가 삭제됐어요", "info");
     } else {
       const { error } = await supabase.from("events").delete().eq("id", id);
       if (error) {
-        show("삭제에 실패했어요.", "error");
+        show(getErrorMessage(error), "error");
         return;
       }
 

@@ -111,15 +111,16 @@ export default function MonthView({ currentDate }: Props) {
                         className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-semibold
                           ${
                             isToday
-                              ? "bg-[#1A1714] text-white"
+                              ? ""
                               : isSun
                                 ? "text-red-400"
                                 : isSat
                                   ? "text-blue-400"
                                   : isThisMonth
-                                    ? "text-gray-800"
-                                    : "text-gray-300"
+                                    ? "text-gray-800 dark:text-gray-200"
+                                    : "text-gray-300 dark:text-gray-600"
                           }`}
+                        style={isToday ? { background: "var(--accent)", color: "var(--accent-fg)" } : undefined}
                       >
                         {day.date()}
                       </span>

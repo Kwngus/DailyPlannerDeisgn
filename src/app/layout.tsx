@@ -5,6 +5,16 @@ export const metadata = {
   title: "Daily Planner",
   description: "나만의 타임테이블 플래너",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Daily Planner",
+  },
+  formatDetection: { telephone: false },
+  icons: {
+    icon: "/icons/favicon-96x96.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport = {
