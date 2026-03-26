@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useEscClose } from "@/lib/hooks/useEscClose";
 import { X, Trash2 } from "lucide-react";
 import type { Todo, Category, Priority } from "@/types";
 
@@ -76,6 +77,8 @@ export default function TodoModal({
     });
     onClose();
   }
+
+  useEscClose(isOpen, onClose);
 
   if (!isOpen) return null;
 

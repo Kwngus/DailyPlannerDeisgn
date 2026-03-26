@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useEscClose } from "@/lib/hooks/useEscClose";
 import { Search, X, Calendar, CheckSquare } from "lucide-react";
 import { useSearch } from "@/lib/hooks/useSearch";
 import { useCategories } from "@/lib/hooks/useCategories";
@@ -110,6 +111,8 @@ export default function SearchModal({ isOpen, onClose, onEventClick }: Props) {
 
   const hasResults = filteredEvents.length > 0 || filteredTodos.length > 0;
   const searched = query.trim().length > 0 || selectedCategoryId !== null;
+
+  useEscClose(isOpen, onClose);
 
   if (!isOpen) return null;
 

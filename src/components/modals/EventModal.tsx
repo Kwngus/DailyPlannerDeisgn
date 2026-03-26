@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Trash2, RotateCcw } from "lucide-react";
+import { useEscClose } from "@/lib/hooks/useEscClose";
+import { X, Trash2 } from "lucide-react";
 import { minToTime, timeToMin } from "@/lib/timeUtils";
 import type { Event, Category, RecurrenceType } from "@/types";
 import type { EventPayload } from "@/lib/hooks/useEvents";
@@ -107,6 +108,8 @@ export default function EventModal({
     });
     onClose();
   }
+
+  useEscClose(isOpen, onClose);
 
   if (!isOpen) return null;
 

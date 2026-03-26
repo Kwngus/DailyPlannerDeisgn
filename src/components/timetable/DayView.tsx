@@ -28,7 +28,7 @@ export default function DayView({
   const notes = events.filter((e) => e.date === dateStr && e.is_note);
   const columnRef = useRef<HTMLDivElement>(null);
 
-  const { dragState, onMouseDown, onMouseMove, onMouseUp, onMouseLeave } =
+  const { dragState, isLongPressed, onMouseDown, onMouseMove, onMouseUp, onMouseLeave } =
     useDragCreate((date, start, end) => {
       onDragCreate?.(date, start, end);
     });
@@ -89,7 +89,7 @@ export default function DayView({
             return (
               <div
                 key={h}
-                className="relative border-b border-[var(--border-subtle)] transition-colors cursor-crosshair"
+                className={`relative border-b border-[var(--border-subtle)] transition-colors ${isLongPressed ? 'cursor-crosshair' : 'cursor-default'}`}
                 style={{ height: `${ROW_HEIGHT}px` }}
               >
                 {/* 10분 간격 세로선 */}
