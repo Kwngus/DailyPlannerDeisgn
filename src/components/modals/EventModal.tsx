@@ -46,6 +46,7 @@ export default function EventModal({
   const [endTime, setEndTime] = useState("10:00");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [isNote, setIsNote] = useState(false);
+  const [isAllday, setIsAllday] = useState(false);
   const [recurrence, setRecurrence] = useState<RecurrenceType>("none");
   const [recurrenceEnd, setRecurrenceEnd] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +61,7 @@ export default function EventModal({
       setEndTime(minToTime(editingEvent.end_min));
       setCategoryId(editingEvent.category_id);
       setIsNote(editingEvent.is_note ?? false);
+      setIsAllday(editingEvent.is_allday ?? false);
       setRecurrence(editingEvent.recurrence_type ?? "none");
       setRecurrenceEnd(editingEvent.recurrence_end_date ?? "");
     } else {
@@ -76,6 +78,7 @@ export default function EventModal({
       }
       setCategoryId(categories[0]?.id ?? null);
       setIsNote(false);
+      setIsAllday(false);
       setRecurrence("none");
       setRecurrenceEnd("");
     }
@@ -90,7 +93,7 @@ export default function EventModal({
     }
     const startMin = timeToMin(startTime);
     const endMin = timeToMin(endTime);
-    if (endMin <= startMin) {
+    if (!isAllday && endMin <= startMin) {
       setError("종료 시간은 시작 시간보다 늦어야 해요.");
       return;
     }
@@ -103,6 +106,7 @@ export default function EventModal({
       end_min: endMin,
       category_id: categoryId,
       is_note: isNote,
+      is_allday: isAllday,
       recurrence_type: recurrence,
       recurrence_end_date: recurrenceEnd || null,
     });

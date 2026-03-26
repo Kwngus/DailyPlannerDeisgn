@@ -59,12 +59,16 @@ export function getSegmentsForHour(
 export function getNotesForHour(
   notes: Event[],
   hour: number
-): Array<{ event: Event; leftPct: number }> {
+): Array<{ event: Event; leftPct: number; widthPct: number }> {
   return notes
     .filter((n) => Math.floor(n.start_min / 60) === hour)
-    .map((n) => ({
-      event: n,
-      leftPct: ((n.start_min % 60) / 60) * 100,
-    }));
+    .map((n) => {
+      const durationMin = Math.min(n.end_min - n.start_min, 60 - (n.start_min % 60));
+      return {
+        event: n,
+        leftPct: ((n.start_min % 60) / 60) * 100,
+        widthPct: (durationMin / 60) * 100,
+      };
+    });
 }
 

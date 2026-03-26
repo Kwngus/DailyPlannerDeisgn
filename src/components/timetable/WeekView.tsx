@@ -121,11 +121,12 @@ export default function WeekView({
                         onClick={onEventClick}
                       />
                     ))}
-                    {noteSegs.map(({ event, leftPct }) => (
+                    {noteSegs.map(({ event, leftPct, widthPct }) => (
                       <NoteBlock
                         key={event.id}
                         event={event}
                         leftPct={leftPct}
+                        widthPct={widthPct}
                         onClick={onEventClick}
                       />
                     ))}

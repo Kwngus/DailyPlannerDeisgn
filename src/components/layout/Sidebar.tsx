@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, Tag, User, Settings, X, CheckSquare } from "lucide-react";
+import { CalendarDays, Tag, User, Settings, X, CheckSquare, LayoutDashboard } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 
 type Props = {
@@ -11,6 +11,7 @@ type Props = {
 };
 
 const navItems = [
+  { href: "/app/dashboard",  label: "대시보드",  icon: LayoutDashboard },
   { href: "/app",            label: "플래너",    icon: CalendarDays },
   { href: "/app/todos",      label: "할 일",     icon: CheckSquare  },
   { href: "/app/categories", label: "분류 지정", icon: Tag          },
