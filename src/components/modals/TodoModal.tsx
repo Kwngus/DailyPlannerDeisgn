@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Trash2, ChevronDown } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import type { Todo, Category, Priority } from "@/types";
 
 type Payload = {
@@ -28,7 +28,7 @@ const PRIORITIES: { value: Priority; label: string; color: string }[] = [
 ];
 
 const INPUT_CLS =
-  "w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors";
+  "w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors";
 
 export default function TodoModal({
   isOpen,
@@ -137,7 +137,7 @@ export default function TodoModal({
                   key={p.value}
                   onClick={() => setPriority(p.value)}
                   className={`flex-1 py-2 rounded-xl text-xs font-semibold border-2 transition-all
-                    ${priority === p.value ? p.color + " border-current" : "bg-gray-50 text-gray-400 border-transparent hover:border-gray-200"}`}
+                    ${priority === p.value ? p.color + " border-current" : "bg-[var(--border-subtle)] text-[var(--text-muted)] border-transparent hover:border-[var(--border)]"}`}
                 >
                   {p.label}
                 </button>
@@ -168,7 +168,7 @@ export default function TodoModal({
                 <button
                   onClick={() => setCategoryId(null)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all
-                    ${categoryId === null ? "border-gray-800 bg-gray-100" : "border-transparent bg-gray-100 text-gray-400 hover:border-gray-300"}`}
+                    ${categoryId === null ? "border-[var(--accent)] bg-[var(--border-subtle)]" : "border-transparent bg-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--border)]"}`}
                 >
                   없음
                 </button>
@@ -177,7 +177,7 @@ export default function TodoModal({
                     key={cat.id}
                     onClick={() => setCategoryId(cat.id)}
                     className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all
-                      ${categoryId === cat.id ? "border-gray-800 opacity-100" : "border-transparent opacity-60"}`}
+                      ${categoryId === cat.id ? "border-[var(--accent)] opacity-100" : "border-transparent opacity-60"}`}
                     style={{ background: cat.color + "99" }}
                   >
                     {cat.name}
@@ -215,8 +215,8 @@ export default function TodoModal({
           </button>
           <button
             onClick={handleSave}
-            className="flex-[2] py-2.5 rounded-xl bg-[#1A1714] text-white text-sm font-semibold
-                       hover:bg-[#3D3430] transition-colors"
+            className="flex-[2] py-2.5 rounded-xl text-sm font-semibold transition-colors"
+            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
           >
             저장
           </button>
