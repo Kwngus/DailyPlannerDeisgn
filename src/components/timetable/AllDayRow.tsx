@@ -19,7 +19,7 @@ export default function AllDayRow({ events, onClick }: Props) {
   if (events.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-1 px-2 py-1.5 border-b border-[var(--border)] bg-[var(--border-subtle)] min-h-[32px]">
+    <div className="flex flex-wrap gap-1 px-2 py-1.5 border-b border-[var(--border)] bg-[var(--border-subtle)] min-h-[32px] justify-center items-center">
       {events.map((event) => {
         const color = event.category?.color ?? "#8A847C";
         return (

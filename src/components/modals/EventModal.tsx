@@ -194,24 +194,14 @@ export default function EventModal({
               {/* 타입 선택 */}
               <div className="flex gap-2">
                 <button
-                  onClick={() => { setIsNote(false); setIsAllday(false); }}
+                  onClick={() => { setIsNote(false); }}
                   className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
-                    !isNote && !isAllday
+                    !isNote
                       ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
                       : "border-[var(--border)] text-gray-400 hover:border-gray-400"
                   }`}
                 >
                   일정
-                </button>
-                <button
-                  onClick={() => { setIsNote(false); setIsAllday(true); }}
-                  className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
-                    isAllday
-                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
-                      : "border-[var(--border)] text-gray-400 hover:border-gray-400"
-                  }`}
-                >
-                  종일
                 </button>
                 <button
                   onClick={() => { setIsNote(true); setIsAllday(false); }}
@@ -243,9 +233,23 @@ export default function EventModal({
               {/* 날짜 + 시간 */}
               <div className={`grid gap-3 ${isAllday ? "grid-cols-1" : "grid-cols-3"}`}>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                    날짜
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                      날짜
+                    </label>
+                    {!isNote && (
+                      <button
+                        onClick={() => setIsAllday((v) => !v)}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
+                          isAllday
+                            ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
+                            : "border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]"
+                        }`}
+                      >
+                        종일
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="date"
                     value={date}
