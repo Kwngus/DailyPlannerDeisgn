@@ -13,6 +13,9 @@ export function useHabits() {
   const { show } = useToastStore();
   const today = dayjs().format("YYYY-MM-DD");
 
+  // supabase 인스턴스 한 번만 생성
+  const supabase = createClient();
+
   useEffect(() => {
     fetchHabits();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -20,54 +23,62 @@ export function useHabits() {
 
   async function fetchHabits() {
     setLoading(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setLoading(false); return; }
 
-    const { data: habitsData, error } = await supabase
-      .from("habits")
-      .select("*")
-      .eq("user_id", user.id)
-      .or(`end_date.is.null,end_date.gte.${today}`)
-      .order("sort_order")
-      .order("created_at");
+    // 두 쿼리를 병렬 실행
+    const [habitsResult, logsResult] = await Promise.all([
+      supabase
+        .from("habits")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .or(`end_date.is.null,end_date.gte.${today}`)
+        .order("sort_order")
+        .order("created_at"),
+      supabase
+        .from("habit_logs")
+        .select("id, habit_id")
+        .eq("user_id", session.user.id)
+        .eq("date", today),
+    ]);
 
-    if (error) { show(getErrorMessage(error), "error"); setLoading(false); return; }
+    if (habitsResult.error) {
+      show(getErrorMessage(habitsResult.error), "error");
+      setLoading(false);
+      return;
+    }
 
-    const { data: logsData } = await supabase
-      .from("habit_logs")
-      .select("id, habit_id")
-      .eq("user_id", user.id)
-      .eq("date", today);
-
-    const logMap = new Map((logsData ?? []).map((l: { id: string; habit_id: string }) => [l.habit_id, l.id]));
+    const logMap2 = new Map<string, string>(
+      (logsResult.data ?? []).map((l: { id: string; habit_id: string }) => [l.habit_id, l.id])
+    );
 
     setHabits(
-      (habitsData ?? []).map((h: Habit) => ({
+      (habitsResult.data ?? []).map((h: Habit) => ({
         ...h,
-        is_done: logMap.has(h.id),
-        log_id: logMap.get(h.id) ?? null,
+        is_done: logMap2.has(h.id),
+        log_id: logMap2.get(h.id) ?? null,
       }))
     );
     setLoading(false);
   }
 
   async function toggleHabit(habit: HabitWithDone) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
 
     if (habit.is_done && habit.log_id) {
-      await supabase.from("habit_logs").delete().eq("id", habit.log_id);
+      // 낙관적 업데이트
       setHabits((prev) =>
         prev.map((h) => h.id === habit.id ? { ...h, is_done: false, log_id: null } : h)
       );
+      await supabase.from("habit_logs").delete().eq("id", habit.log_id);
     } else {
       const { data } = await supabase
         .from("habit_logs")
-        .insert({ habit_id: habit.id, user_id: user.id, date: today })
+        .insert({ habit_id: habit.id, user_id: session.user.id, date: today })
         .select()
         .single();
+      // 낙관적 업데이트
       setHabits((prev) =>
         prev.map((h) => h.id === habit.id ? { ...h, is_done: true, log_id: data?.id ?? null } : h)
       );
@@ -75,13 +86,12 @@ export function useHabits() {
   }
 
   async function addHabit(title: string, endDate: string | null) {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
 
     const { data, error } = await supabase
       .from("habits")
-      .insert({ user_id: user.id, title: title.trim(), end_date: endDate || null, sort_order: habits.length })
+      .insert({ user_id: session.user.id, title: title.trim(), end_date: endDate || null, sort_order: habits.length })
       .select()
       .single();
 
@@ -91,7 +101,6 @@ export function useHabits() {
   }
 
   async function updateHabit(id: string, title: string, endDate: string | null) {
-    const supabase = createClient();
     const { error } = await supabase
       .from("habits")
       .update({ title: title.trim(), end_date: endDate || null })
@@ -104,9 +113,8 @@ export function useHabits() {
   }
 
   async function deleteHabit(id: string) {
-    const supabase = createClient();
-    await supabase.from("habits").delete().eq("id", id);
     setHabits((prev) => prev.filter((h) => h.id !== id));
+    await supabase.from("habits").delete().eq("id", id);
     show("루틴이 삭제됐어요", "info");
   }
 

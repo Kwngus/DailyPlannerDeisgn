@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { getHours, ROW_HEIGHT, isToday, getSegmentsForHour, getNotesForHour } from '@/lib/timeUtils';
 import EventBlock from './EventBlock';
 import NoteBlock from './NoteBlock';
@@ -29,9 +29,9 @@ export default function DayView({
   dateStr, events, onEventClick, onCellClick, onDragCreate, onMoveEvent,
 }: Props) {
   const HOURS = getHours();
-  const allDayEvents = events.filter((e) => e.date === dateStr && e.is_allday);
-  const regularEvents = events.filter((e) => e.date === dateStr && !e.is_note && !e.is_allday);
-  const notes = events.filter((e) => e.date === dateStr && e.is_note);
+  const allDayEvents = useMemo(() => events.filter((e) => e.date === dateStr && e.is_allday), [events, dateStr]);
+  const regularEvents = useMemo(() => events.filter((e) => e.date === dateStr && !e.is_note && !e.is_allday), [events, dateStr]);
+  const notes = useMemo(() => events.filter((e) => e.date === dateStr && e.is_note), [events, dateStr]);
   const columnRef = useRef<HTMLDivElement>(null);
 
   const { dragState, isLongPressed, onMouseDown, onMouseMove, onMouseUp, onMouseLeave } =

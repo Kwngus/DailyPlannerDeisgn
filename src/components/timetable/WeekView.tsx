@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { getHours, ROW_HEIGHT, getWeekDates, isToday, getSegmentsForHour, getNotesForHour } from '@/lib/timeUtils';
 import { useSettingsStore } from '@/store/settingsStore';
 import EventBlock from './EventBlock';
@@ -33,6 +33,19 @@ export default function WeekView({
   const { weekStart } = useSettingsStore();
   const weekDates = getWeekDates(currentDate, weekStart);
   const colRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // 날짜별 이벤트 사전 분류 (매 렌더마다 반복 filter 방지)
+  const eventsByDate = useMemo(() => {
+    const map: Record<string, { allDay: typeof events; regular: typeof events; notes: typeof events }> = {};
+    for (const date of weekDates) {
+      map[date] = {
+        allDay: events.filter((e) => e.date === date && e.is_allday),
+        regular: events.filter((e) => e.date === date && !e.is_note && !e.is_allday),
+        notes: events.filter((e) => e.date === date && e.is_note),
+      };
+    }
+    return map;
+  }, [events, weekDates]);
 
   const { dragState, isLongPressed, onMouseDown, onMouseMove, onMouseUp, onMouseLeave } =
     useDragCreate((date, start, end) => {
@@ -80,7 +93,7 @@ export default function WeekView({
             <span className="text-[8px] font-bold tracking-widest text-gray-400 uppercase whitespace-nowrap">종일</span>
           </div>
           {weekDates.map((dateStr) => {
-            const dayAllDay = events.filter((e) => e.date === dateStr && e.is_allday);
+            const dayAllDay = eventsByDate[dateStr]?.allDay ?? [];
             return (
               <div key={dateStr} className="border-l border-[var(--border)]">
                 <AllDayRow events={dayAllDay} onClick={onEventClick} />
@@ -107,8 +120,8 @@ export default function WeekView({
 
         {/* 날짜별 컬럼 */}
         {weekDates.map((dateStr, di) => {
-          const dayEvents = events.filter((e) => e.date === dateStr && !e.is_note && !e.is_allday);
-          const dayNotes = events.filter((e) => e.date === dateStr && e.is_note);
+          const dayEvents = eventsByDate[dateStr]?.regular ?? [];
+          const dayNotes = eventsByDate[dateStr]?.notes ?? [];
           return (
             <div
               key={dateStr}
