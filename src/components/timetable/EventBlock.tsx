@@ -22,12 +22,16 @@ function hexToRgba(hex: string, alpha: number): string {
 const FALLBACK = { bg: "rgba(255,210,80,0.45)", border: "rgba(200,160,0,0.7)" };
 
 export default function EventBlock({ event, leftPct, widthPct, isFirst, onClick }: Props) {
+  const cancelled = event.is_cancelled ?? false;
   const color = event.category?.color
     ? {
-        bg: hexToRgba(event.category.color, 0.45),
-        border: hexToRgba(event.category.color, 0.85),
+        bg: hexToRgba(event.category.color, cancelled ? 0.18 : 0.45),
+        border: hexToRgba(event.category.color, cancelled ? 0.35 : 0.85),
       }
-    : FALLBACK;
+    : {
+        bg: cancelled ? "rgba(255,210,80,0.18)" : FALLBACK.bg,
+        border: cancelled ? "rgba(200,160,0,0.35)" : FALLBACK.border,
+      };
 
   return (
     <div
@@ -38,6 +42,7 @@ export default function EventBlock({ event, leftPct, widthPct, isFirst, onClick 
         background: color.bg,
         borderTop: `3px solid ${color.border}`,
         zIndex: 10,
+        opacity: cancelled ? 0.6 : 1,
       }}
       onClick={(e) => {
         e.stopPropagation();
@@ -46,13 +51,25 @@ export default function EventBlock({ event, leftPct, widthPct, isFirst, onClick 
     >
       {isFirst && (
         <>
-          <div className="text-xs font-semibold truncate leading-tight">
+          <div className={`text-xs font-semibold truncate leading-tight ${cancelled ? "line-through" : ""}`}>
             {event.title}
           </div>
           <div className="text-[0.65rem] opacity-60 leading-tight whitespace-nowrap">
             {minToTime(event.start_min)}–{minToTime(event.end_min)}
           </div>
         </>
+      )}
+
+      {/* 취소선 — 블록 전체를 가로지르는 선 */}
+      {cancelled && (
+        <div
+          className="absolute inset-x-0 pointer-events-none"
+          style={{
+            top: "50%",
+            height: "1.5px",
+            background: color.border,
+          }}
+        />
       )}
     </div>
   );

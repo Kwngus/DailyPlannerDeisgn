@@ -18,6 +18,7 @@ export type Event = {
   end_min: number;
   is_note: boolean;
   is_allday: boolean;
+  is_cancelled: boolean;
   recurrence_type: RecurrenceType;
   recurrence_end_date: string | null;
   recurrence_group_id: string | null;

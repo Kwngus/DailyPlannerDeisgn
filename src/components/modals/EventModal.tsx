@@ -47,6 +47,7 @@ export default function EventModal({
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [isNote, setIsNote] = useState(false);
   const [isAllday, setIsAllday] = useState(false);
+  const [isCancelled, setIsCancelled] = useState(false);
   const [recurrence, setRecurrence] = useState<RecurrenceType>("none");
   const [recurrenceEnd, setRecurrenceEnd] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export default function EventModal({
       setCategoryId(editingEvent.category_id);
       setIsNote(editingEvent.is_note ?? false);
       setIsAllday(editingEvent.is_allday ?? false);
+      setIsCancelled(editingEvent.is_cancelled ?? false);
       setRecurrence(editingEvent.recurrence_type ?? "none");
       setRecurrenceEnd(editingEvent.recurrence_end_date ?? "");
     } else {
@@ -79,6 +81,7 @@ export default function EventModal({
       setCategoryId(categories[0]?.id ?? null);
       setIsNote(false);
       setIsAllday(false);
+      setIsCancelled(false);
       setRecurrence("none");
       setRecurrenceEnd("");
     }
@@ -107,6 +110,7 @@ export default function EventModal({
       category_id: categoryId,
       is_note: isNote,
       is_allday: isAllday,
+      is_cancelled: isCancelled,
       recurrence_type: recurrence,
       recurrence_end_date: recurrenceEnd || null,
     });
@@ -123,7 +127,9 @@ export default function EventModal({
         {/* 헤더 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)]">
           <h2 className="font-serif text-xl">
-            {editingEvent ? (isNote ? "메모 수정" : "일정 수정") : (isNote ? "메모 추가" : "일정 추가")}
+            {editingEvent
+              ? isNote ? "메모 수정" : isAllday ? "종일 일정 수정" : "일정 수정"
+              : isNote ? "메모 추가" : isAllday ? "종일 일정 추가" : "일정 추가"}
           </h2>
           <div className="flex items-center gap-2">
             {editingEvent && onDelete && !showDeleteConfirm && (
@@ -188,9 +194,9 @@ export default function EventModal({
               {/* 타입 선택 */}
               <div className="flex gap-2">
                 <button
-                  onClick={() => setIsNote(false)}
+                  onClick={() => { setIsNote(false); setIsAllday(false); }}
                   className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
-                    !isNote
+                    !isNote && !isAllday
                       ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
                       : "border-[var(--border)] text-gray-400 hover:border-gray-400"
                   }`}
@@ -198,7 +204,17 @@ export default function EventModal({
                   일정
                 </button>
                 <button
-                  onClick={() => setIsNote(true)}
+                  onClick={() => { setIsNote(false); setIsAllday(true); }}
+                  className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
+                    isAllday
+                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
+                      : "border-[var(--border)] text-gray-400 hover:border-gray-400"
+                  }`}
+                >
+                  종일
+                </button>
+                <button
+                  onClick={() => { setIsNote(true); setIsAllday(false); }}
                   className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
                     isNote
                       ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
@@ -225,7 +241,7 @@ export default function EventModal({
               </div>
 
               {/* 날짜 + 시간 */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className={`grid gap-3 ${isAllday ? "grid-cols-1" : "grid-cols-3"}`}>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
                     날짜
@@ -234,31 +250,35 @@ export default function EventModal({
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                    className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                    시작
-                  </label>
-                  <input
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                    종료
-                  </label>
-                  <input
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
-                  />
-                </div>
+                {!isAllday && (
+                  <>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                        시작
+                      </label>
+                      <input
+                        type="time"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                        종료
+                      </label>
+                      <input
+                        type="time"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* 반복 설정 */}
@@ -338,6 +358,20 @@ export default function EventModal({
                   className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors resize-none bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
                 />
               </div>
+
+              {/* 취소 처리 (수정 모드만) */}
+              {editingEvent && !isNote && (
+                <button
+                  onClick={() => setIsCancelled((v) => !v)}
+                  className={`w-full py-2 rounded-xl text-sm font-semibold border-2 transition-all flex items-center justify-center gap-2 ${
+                    isCancelled
+                      ? "border-gray-400 bg-gray-100 text-gray-500 line-through"
+                      : "border-[var(--border)] text-[var(--text-muted)] hover:border-gray-400"
+                  }`}
+                >
+                  <span>{isCancelled ? "취소됨 — 되돌리기" : "일정 취소 처리"}</span>
+                </button>
+              )}
 
               {error && (
                 <p className="text-red-500 text-xs text-center">{error}</p>

@@ -6,6 +6,7 @@ import EventBlock from './EventBlock';
 import NoteBlock from './NoteBlock';
 import NowLine from './NowLine';
 import DragPreview from './DragPreview';
+import AllDayRow from './AllDayRow';
 import { useDragCreate } from '@/lib/hooks/useDragCreate';
 import type { Event } from '@/types';
 import dayjs from 'dayjs';
@@ -61,6 +62,23 @@ export default function WeekView({
         ))}
       </div>
 
+      {/* 종일 일정 row */}
+      {weekDates.some((d) => events.some((e) => e.date === d && e.is_allday)) && (
+        <div className="grid" style={{ gridTemplateColumns: '52px repeat(7, 1fr)' }}>
+          <div className="border-r border-[var(--border)] flex items-center justify-center">
+            <span className="text-[8px] font-bold tracking-widest text-gray-400 uppercase rotate-[-90deg] whitespace-nowrap">종일</span>
+          </div>
+          {weekDates.map((dateStr) => {
+            const dayAllDay = events.filter((e) => e.date === dateStr && e.is_allday);
+            return (
+              <div key={dateStr} className="border-l border-[var(--border)]">
+                <AllDayRow events={dayAllDay} onClick={onEventClick} />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* 시간 그리드 */}
       <div className="grid" style={{ gridTemplateColumns: '52px repeat(7, 1fr)' }}>
         {/* 시간 라벨 */}
@@ -78,7 +96,7 @@ export default function WeekView({
 
         {/* 날짜별 컬럼 */}
         {weekDates.map((dateStr, di) => {
-          const dayEvents = events.filter((e) => e.date === dateStr && !e.is_note);
+          const dayEvents = events.filter((e) => e.date === dateStr && !e.is_note && !e.is_allday);
           const dayNotes = events.filter((e) => e.date === dateStr && e.is_note);
           return (
             <div

@@ -6,6 +6,7 @@ import EventBlock from './EventBlock';
 import NoteBlock from './NoteBlock';
 import NowLine from './NowLine';
 import DragPreview from './DragPreview';
+import AllDayRow from './AllDayRow';
 import { useDragCreate } from '@/lib/hooks/useDragCreate';
 import type { Event } from '@/types';
 import dayjs from 'dayjs';
@@ -24,7 +25,8 @@ type Props = {
 export default function DayView({
   dateStr, events, onEventClick, onCellClick, onDragCreate,
 }: Props) {
-  const regularEvents = events.filter((e) => e.date === dateStr && !e.is_note);
+  const allDayEvents = events.filter((e) => e.date === dateStr && e.is_allday);
+  const regularEvents = events.filter((e) => e.date === dateStr && !e.is_note && !e.is_allday);
   const notes = events.filter((e) => e.date === dateStr && e.is_note);
   const columnRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +60,16 @@ export default function DayView({
           </div>
         </div>
       </div>
+
+      {/* 종일 일정 row */}
+      {allDayEvents.length > 0 && (
+        <div className="grid" style={{ gridTemplateColumns: '52px 1fr' }}>
+          <div className="border-r border-[var(--border)] flex items-center justify-center">
+            <span className="text-[8px] font-bold tracking-widest text-gray-400 uppercase rotate-[-90deg] whitespace-nowrap">종일</span>
+          </div>
+          <AllDayRow events={allDayEvents} onClick={onEventClick} />
+        </div>
+      )}
 
       {/* 시간 그리드 */}
       <div className="grid" style={{ gridTemplateColumns: '52px 1fr' }}>

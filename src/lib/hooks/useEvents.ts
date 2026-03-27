@@ -16,6 +16,7 @@ export type EventPayload = {
   category_id: string | null;
   is_note: boolean;
   is_allday: boolean;
+  is_cancelled: boolean;
   recurrence_type: RecurrenceType;
   recurrence_end_date: string | null;
 };
@@ -82,6 +83,7 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
       category_id: payload.category_id,
       is_note: payload.is_note,
       is_allday: payload.is_allday,
+      is_cancelled: payload.is_cancelled,
       recurrence_type: payload.recurrence_type,
       recurrence_end_date: payload.recurrence_end_date,
       recurrence_group_id: groupId,
@@ -113,6 +115,7 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
         category_id: payload.category_id,
         is_note: payload.is_note,
         is_allday: payload.is_allday,
+        is_cancelled: payload.is_cancelled,
       })
       .eq("id", id);
     if (error) {
@@ -160,6 +163,7 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
           category_id: target.category_id,
           is_note: target.is_note ?? false,
           is_allday: target.is_allday ?? false,
+          is_cancelled: target.is_cancelled ?? false,
           recurrence_type: "none",
           recurrence_group_id: null,
         });
