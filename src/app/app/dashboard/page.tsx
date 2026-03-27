@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Clock, CalendarDays, CheckCircle2, Circle } from "lucide-react";
+import { ChevronRight, Clock, CheckCircle2, Circle } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { useTodos } from "@/lib/hooks/useTodos";
+import { useHabits } from "@/lib/hooks/useHabits";
 import { usePlannerStore } from "@/store/plannerStore";
 import { minToTime } from "@/lib/timeUtils";
-import type { Event, Todo } from "@/types";
+import type { Event } from "@/types";
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
 import duration from "dayjs/plugin/duration";
@@ -46,6 +47,7 @@ export default function DashboardPage() {
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const { todos } = useTodos();
+  const { habits, loading: habitsLoading, toggleHabit } = useHabits();
 
   const today = dayjs().format("YYYY-MM-DD");
   const todayLabel = dayjs().format("M월 D일 dddd");
@@ -285,6 +287,85 @@ export default function DashboardPage() {
           </div>
         )}
       </section>
+
+      {/* 오늘의 루틴 */}
+      {(habitsLoading || habits.length > 0) && (
+        <section className="rounded-2xl border bg-[var(--surface)] border-[var(--border)] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)]">
+            <span className="font-serif text-base font-semibold">오늘의 루틴</span>
+            {!habitsLoading && habits.length > 0 && (
+              <span className="text-xs text-[var(--text-muted)]">
+                {habits.filter((h) => h.is_done).length}/{habits.length} 완료
+              </span>
+            )}
+          </div>
+
+          {habitsLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <div className="w-5 h-5 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
+            </div>
+          ) : (
+            <>
+              {/* 진행률 바 */}
+              {habits.length > 0 && (
+                <div className="px-4 pt-3 pb-1">
+                  <div className="w-full h-1.5 rounded-full bg-[var(--border)]">
+                    <div
+                      className="h-1.5 rounded-full transition-all duration-500"
+                      style={{
+                        width: `${(habits.filter((h) => h.is_done).length / habits.length) * 100}%`,
+                        background: "var(--point)",
+                      }}
+                    />
+                  </div>
+                  {habits.every((h) => h.is_done) && (
+                    <p className="text-xs text-center mt-2 font-semibold" style={{ color: "var(--point)" }}>
+                      오늘 루틴 모두 완료! 🎉
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* 루틴 목록 */}
+              <div className="px-4 py-2 space-y-1">
+                {habits.map((habit) => (
+                  <div
+                    key={habit.id}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all ${
+                      habit.is_done
+                        ? "bg-[var(--border-subtle)] border-[var(--border-subtle)] opacity-70"
+                        : "bg-[var(--surface)] border-[var(--border)]"
+                    }`}
+                  >
+                    <button
+                      onClick={() => toggleHabit(habit)}
+                      className="flex-shrink-0 transition-colors"
+                    >
+                      {habit.is_done ? (
+                        <CheckCircle2 size={18} style={{ color: "var(--point)" }} />
+                      ) : (
+                        <Circle size={18} className="text-gray-300 hover:text-gray-500" />
+                      )}
+                    </button>
+                    <span
+                      className={`flex-1 text-sm font-medium ${
+                        habit.is_done ? "line-through text-[var(--text-muted)]" : "text-[var(--text)]"
+                      }`}
+                    >
+                      {habit.title}
+                    </span>
+                    {habit.end_date && (
+                      <span className="text-[10px] text-[var(--text-muted)] flex-shrink-0">
+                        ~{dayjs(habit.end_date).format("M/D")}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+      )}
 
       {/* 다가오는 일정 */}
       <section>

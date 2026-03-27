@@ -10,9 +10,9 @@ const ICONS = {
 };
 
 const COLORS = {
-  success: "bg-[#1A1714] text-[#FFFFFF]",
-  error: "bg-red-600 text-[#FFFFFF]",
-  info: "bg-blue-600 text-[#FFFFFF]",
+  success: "bg-[var(--text)] text-[var(--bg)]",
+  error: "bg-red-600 text-white",
+  info: "bg-[var(--text)] text-[var(--bg)]",
 };
 
 export default function ToastContainer() {
