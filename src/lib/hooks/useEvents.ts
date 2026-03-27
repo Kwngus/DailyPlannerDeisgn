@@ -140,14 +140,80 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
       if (error) { show(getErrorMessage(error), "error"); return; }
       show("이후 반복 일정이 수정됐어요 ✓");
     } else {
-      const { error } = await supabase
+      // 전체 수정: 기존 그룹 삭제 후 새 날짜/설정으로 재생성
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // 그룹의 최초 날짜 조회
+      const { data: groupEvents } = await supabase
         .from("events")
-        .update(commonFields)
+        .select("date")
+        .eq("recurrence_group_id", target.recurrence_group_id)
+        .order("date", { ascending: true })
+        .limit(1);
+      const firstDate = groupEvents?.[0]?.date ?? payload.date;
+
+      const { error: deleteError } = await supabase
+        .from("events")
+        .delete()
         .eq("recurrence_group_id", target.recurrence_group_id);
+      if (deleteError) { show(getErrorMessage(deleteError), "error"); return; }
+
+      const dates = generateRecurrenceDates(
+        firstDate,
+        payload.recurrence_type,
+        payload.recurrence_end_date,
+        payload.recurrence_days,
+      );
+
+      const rows = dates.map((date) => ({
+        user_id: user.id,
+        title: payload.title,
+        note: payload.note,
+        date,
+        start_min: payload.is_allday ? 0 : payload.start_min,
+        end_min: payload.is_allday ? 0 : payload.end_min,
+        category_id: payload.category_id,
+        is_note: payload.is_note,
+        is_allday: payload.is_allday,
+        is_cancelled: payload.is_cancelled,
+        recurrence_type: payload.recurrence_type,
+        recurrence_days: payload.recurrence_days,
+        recurrence_end_date: payload.recurrence_end_date,
+        recurrence_group_id: target.recurrence_group_id,
+      }));
+
+      const { error } = await supabase.from("events").insert(rows);
       if (error) { show(getErrorMessage(error), "error"); return; }
       show("반복 일정 전체가 수정됐어요 ✓");
     }
 
+    await fetchEvents();
+  }
+
+  async function moveEvent(id: string, startMin: number, endMin: number) {
+    const target = events.find((e) => e.id === id);
+    if (!target) return;
+
+    const { error } = await supabase
+      .from("events")
+      .update({ start_min: startMin, end_min: endMin })
+      .eq("id", id);
+
+    if (error) {
+      show(getErrorMessage(error), "error");
+      return;
+    }
+
+    const origStart = target.start_min;
+    const origEnd = target.end_min;
+    show("일정이 이동됐어요 ✓", "info", async () => {
+      await supabase
+        .from("events")
+        .update({ start_min: origStart, end_min: origEnd })
+        .eq("id", id);
+      await fetchEvents();
+    });
     await fetchEvents();
   }
 
@@ -203,6 +269,7 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
     loading,
     addEvent,
     updateEvent,
+    moveEvent,
     deleteEvent,
     refetch: fetchEvents,
   };

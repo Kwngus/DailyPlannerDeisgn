@@ -10,6 +10,8 @@ type Props = {
   widthPct: number;  // 시간 행 안에서 차지하는 너비 (0~100%)
   isFirst: boolean;  // 시작 행인지 여부 (연속 행은 형광펜만 표시)
   onClick: (event: Event) => void;
+  onMouseDown?: (e: React.MouseEvent) => void;
+  isDragging?: boolean;
 };
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -22,7 +24,7 @@ function hexToRgba(hex: string, alpha: number): string {
 
 const FALLBACK = { bg: "rgba(255,210,80,0.45)", border: "rgba(200,160,0,0.7)" };
 
-export default function EventBlock({ event, leftPct, widthPct, isFirst, onClick }: Props) {
+export default function EventBlock({ event, leftPct, widthPct, isFirst, onClick, onMouseDown, isDragging }: Props) {
   const { timeFormat } = useSettingsStore();
   const cancelled = event.is_cancelled ?? false;
   const color = event.category?.color
@@ -37,15 +39,17 @@ export default function EventBlock({ event, leftPct, widthPct, isFirst, onClick 
 
   return (
     <div
-      className="absolute top-[3px] bottom-[3px] rounded-md px-2 py-1 cursor-pointer transition-all hover:brightness-95 hover:scale-[0.98] select-none overflow-hidden"
+      data-event-block
+      className="absolute top-[3px] bottom-[3px] rounded-md px-2 py-1 cursor-grab active:cursor-grabbing transition-all hover:brightness-95 hover:scale-[0.98] select-none overflow-hidden"
       style={{
         left: `${leftPct}%`,
         width: `max(${widthPct}%, 28px)`,
         background: color.bg,
         borderTop: `3px solid ${color.border}`,
         zIndex: 10,
-        opacity: cancelled ? 0.6 : 1,
+        opacity: isDragging ? 0.3 : cancelled ? 0.6 : 1,
       }}
+      onMouseDown={onMouseDown}
       onClick={(e) => {
         e.stopPropagation();
         onClick(event);

@@ -29,7 +29,7 @@ export default function AppPage() {
     setViewMode(defaultView);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const { events, loading, addEvent, updateEvent, deleteEvent } = useEvents(
+  const { events, loading, addEvent, updateEvent, moveEvent, deleteEvent } = useEvents(
     currentDate,
     viewMode,
   );
@@ -91,6 +91,7 @@ export default function AppPage() {
         onEventClick={openEditModal}
         onCellClick={openAddModal}
         onDragCreate={openDragModal}
+        onMoveEvent={moveEvent}
       />
     ) : (
       <WeekView
@@ -99,13 +100,14 @@ export default function AppPage() {
         onEventClick={openEditModal}
         onCellClick={openAddModal}
         onDragCreate={openDragModal}
+        onMoveEvent={moveEvent}
       />
     );
   }
 
   return (
     <div
-      className={`flex gap-3 p-3 pb-4 ${
+      className={`flex gap-3 pt-3 pb-4 sm:px-3 ${
         viewMode === "month"
           ? "h-auto min-h-[calc(100vh-56px)]"
           : "h-[calc(100vh-56px)]"

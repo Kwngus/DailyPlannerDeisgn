@@ -7,8 +7,10 @@ import EventBlock from './EventBlock';
 import NoteBlock from './NoteBlock';
 import NowLine from './NowLine';
 import DragPreview from './DragPreview';
+import DragMovePreview from './DragMovePreview';
 import AllDayRow from './AllDayRow';
 import { useDragCreate } from '@/lib/hooks/useDragCreate';
+import { useDragMove } from '@/lib/hooks/useDragMove';
 import type { Event } from '@/types';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
@@ -21,10 +23,11 @@ type Props = {
   onEventClick: (event: Event) => void;
   onCellClick: (dateStr: string, hour: number) => void;
   onDragCreate?: (dateStr: string, startMin: number, endMin: number) => void;
+  onMoveEvent?: (id: string, startMin: number, endMin: number) => void;
 };
 
 export default function WeekView({
-  currentDate, events, onEventClick, onCellClick, onDragCreate,
+  currentDate, events, onEventClick, onCellClick, onDragCreate, onMoveEvent,
 }: Props) {
   const HOURS = getHours();
   const { weekStart } = useSettingsStore();
@@ -36,8 +39,13 @@ export default function WeekView({
       onDragCreate?.(date, start, end);
     });
 
+  const { draggingId, moveState, onEventMouseDown, onMouseMove: onMoveMouseMove, onMouseUp: onMoveMouseUp, cancelDrag } =
+    useDragMove((id, startMin, endMin) => {
+      onMoveEvent?.(id, startMin, endMin);
+    });
+
   return (
-    <div className="rounded-2xl border overflow-hidden mx-4 bg-[var(--surface)] border-[var(--border)]">
+    <div className="sm:rounded-2xl border overflow-hidden sm:mx-4 bg-[var(--surface)] border-[var(--border)]">
       {/* 요일 헤더 */}
       <div
         className="grid border-b-2 border-[var(--border)]"
@@ -107,9 +115,9 @@ export default function WeekView({
               ref={(el) => { colRefs.current[di] = el; }}
               className="relative border-l border-[var(--border)] select-none"
               onMouseDown={(e) => colRefs.current[di] && onMouseDown(e, dateStr, colRefs.current[di]!)}
-              onMouseMove={(e) => colRefs.current[di] && onMouseMove(e, colRefs.current[di]!)}
-              onMouseUp={(e) => colRefs.current[di] && onMouseUp(e, onCellClick, colRefs.current[di]!)}
-              onMouseLeave={onMouseLeave}
+              onMouseMove={(e) => { const col = colRefs.current[di]; if (!col) return; onMouseMove(e, col); onMoveMouseMove(e, col); }}
+              onMouseUp={(e) => { const col = colRefs.current[di]; if (!col) return; onMouseUp(e, onCellClick, col); onMoveMouseUp(); }}
+              onMouseLeave={() => { onMouseLeave(); cancelDrag(); }}
             >
               {HOURS.map((h) => {
                 const segs = getSegmentsForHour(dayEvents, h);
@@ -140,6 +148,8 @@ export default function WeekView({
                         widthPct={widthPct}
                         isFirst={isFirst}
                         onClick={onEventClick}
+                        onMouseDown={(e) => { const col = colRefs.current[di]; if (col) onEventMouseDown(e, event, col); }}
+                        isDragging={draggingId === event.id}
                       />
                     ))}
                     {noteSegs.map(({ event, leftPct, widthPct }) => (
@@ -157,9 +167,14 @@ export default function WeekView({
 
               {isToday(dateStr) && <NowLine />}
 
-              {/* 드래그 프리뷰 */}
+              {/* 드래그 생성 프리뷰 */}
               {dragState?.dateStr === dateStr && dragState.isCreating && (
                 <DragPreview dragState={dragState} />
+              )}
+
+              {/* 드래그 이동 프리뷰 */}
+              {moveState?.event && events.some((ev) => ev.date === dateStr && ev.id === moveState.event.id) && (
+                <DragMovePreview moveState={moveState} />
               )}
             </div>
           );

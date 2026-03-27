@@ -6,8 +6,10 @@ import EventBlock from './EventBlock';
 import NoteBlock from './NoteBlock';
 import NowLine from './NowLine';
 import DragPreview from './DragPreview';
+import DragMovePreview from './DragMovePreview';
 import AllDayRow from './AllDayRow';
 import { useDragCreate } from '@/lib/hooks/useDragCreate';
+import { useDragMove } from '@/lib/hooks/useDragMove';
 import type { Event } from '@/types';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
@@ -20,10 +22,11 @@ type Props = {
   onEventClick: (event: Event) => void;
   onCellClick: (dateStr: string, hour: number) => void;
   onDragCreate?: (dateStr: string, startMin: number, endMin: number) => void;
+  onMoveEvent?: (id: string, startMin: number, endMin: number) => void;
 };
 
 export default function DayView({
-  dateStr, events, onEventClick, onCellClick, onDragCreate,
+  dateStr, events, onEventClick, onCellClick, onDragCreate, onMoveEvent,
 }: Props) {
   const HOURS = getHours();
   const allDayEvents = events.filter((e) => e.date === dateStr && e.is_allday);
@@ -36,8 +39,13 @@ export default function DayView({
       onDragCreate?.(date, start, end);
     });
 
+  const { draggingId, moveState, onEventMouseDown, onMouseMove: onMoveMouseMove, onMouseUp: onMoveMouseUp, cancelDrag } =
+    useDragMove((id, startMin, endMin) => {
+      onMoveEvent?.(id, startMin, endMin);
+    });
+
   return (
-    <div className="rounded-2xl border overflow-hidden mx-4 bg-[var(--surface)] border-[var(--border)]">
+    <div className="sm:rounded-2xl border overflow-hidden sm:mx-4 bg-[var(--surface)] border-[var(--border)]">
       {/* 날짜 헤더 */}
       <div
         className="grid border-b-2 border-[var(--border)]"
@@ -92,9 +100,9 @@ export default function DayView({
           ref={columnRef}
           className="relative select-none"
           onMouseDown={(e) => columnRef.current && onMouseDown(e, dateStr, columnRef.current)}
-          onMouseMove={(e) => columnRef.current && onMouseMove(e, columnRef.current)}
-          onMouseUp={(e) => columnRef.current && onMouseUp(e, onCellClick, columnRef.current)}
-          onMouseLeave={onMouseLeave}
+          onMouseMove={(e) => { if (!columnRef.current) return; onMouseMove(e, columnRef.current); onMoveMouseMove(e, columnRef.current); }}
+          onMouseUp={(e) => { if (!columnRef.current) return; onMouseUp(e, onCellClick, columnRef.current); onMoveMouseUp(); }}
+          onMouseLeave={() => { onMouseLeave(); cancelDrag(); }}
         >
           {HOURS.map((h) => {
             const segs = getSegmentsForHour(regularEvents, h);
@@ -125,6 +133,8 @@ export default function DayView({
                     widthPct={widthPct}
                     isFirst={isFirst}
                     onClick={onEventClick}
+                    onMouseDown={(e) => columnRef.current && onEventMouseDown(e, event, columnRef.current)}
+                    isDragging={draggingId === event.id}
                   />
                 ))}
                 {noteSegs.map(({ event, leftPct, widthPct }) => (
@@ -142,10 +152,13 @@ export default function DayView({
 
           {isToday(dateStr) && <NowLine />}
 
-          {/* 드래그 프리뷰 */}
+          {/* 드래그 생성 프리뷰 */}
           {dragState?.dateStr === dateStr && dragState.isCreating && (
             <DragPreview dragState={dragState} />
           )}
+
+          {/* 드래그 이동 프리뷰 */}
+          {moveState && <DragMovePreview moveState={moveState} />}
         </div>
       </div>
     </div>
