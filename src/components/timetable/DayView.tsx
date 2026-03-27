@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
-import { HOURS, ROW_HEIGHT, isToday, getSegmentsForHour, getNotesForHour } from '@/lib/timeUtils';
+import { getHours, ROW_HEIGHT, isToday, getSegmentsForHour, getNotesForHour } from '@/lib/timeUtils';
 import EventBlock from './EventBlock';
 import NoteBlock from './NoteBlock';
 import NowLine from './NowLine';
@@ -25,6 +25,7 @@ type Props = {
 export default function DayView({
   dateStr, events, onEventClick, onCellClick, onDragCreate,
 }: Props) {
+  const HOURS = getHours();
   const allDayEvents = events.filter((e) => e.date === dateStr && e.is_allday);
   const regularEvents = events.filter((e) => e.date === dateStr && !e.is_note && !e.is_allday);
   const notes = events.filter((e) => e.date === dateStr && e.is_note);

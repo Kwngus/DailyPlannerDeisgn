@@ -58,7 +58,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="hello@example.com"
               required
-              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
             />
           </div>
 
@@ -72,7 +72,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
             />
           </div>
 
@@ -81,7 +81,8 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-[#1A1714] text-white rounded-xl text-sm font-semibold tracking-wide hover:bg-[#3D3430] transition-colors disabled:opacity-50"
+            className="w-full py-3 rounded-xl text-sm font-semibold tracking-wide transition-colors disabled:opacity-50"
+            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
           >
             {loading ? "로그인 중..." : "로그인"}
           </button>
@@ -91,7 +92,7 @@ export default function LoginPage() {
           계정이 없으신가요?{" "}
           <Link
             href="/signup"
-            className="text-gray-800 font-semibold hover:underline"
+            className="text-[var(--text)] font-semibold hover:underline"
           >
             회원가입
           </Link>

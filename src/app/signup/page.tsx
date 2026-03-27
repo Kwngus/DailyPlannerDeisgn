@@ -53,7 +53,7 @@ export default function SignupPage() {
           </p>
           <Link
             href="/login"
-            className="text-sm font-semibold text-gray-800 hover:underline"
+            className="text-sm font-semibold text-[var(--text)] hover:underline"
           >
             로그인 페이지로 →
           </Link>
@@ -86,7 +86,7 @@ export default function SignupPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="hello@example.com"
               required
-              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
             />
           </div>
 
@@ -100,7 +100,7 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="6자 이상"
               required
-              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
             />
           </div>
 
@@ -114,7 +114,7 @@ export default function SignupPage() {
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="••••••••"
               required
-              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+              className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
             />
           </div>
 
@@ -123,7 +123,8 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-[#1A1714] text-white rounded-xl text-sm font-semibold tracking-wide hover:bg-[#3D3430] transition-colors disabled:opacity-50"
+            className="w-full py-3 rounded-xl text-sm font-semibold tracking-wide transition-colors disabled:opacity-50"
+            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
           >
             {loading ? "가입 중..." : "회원가입"}
           </button>
@@ -133,7 +134,7 @@ export default function SignupPage() {
           이미 계정이 있으신가요?{" "}
           <Link
             href="/login"
-            className="text-gray-800 font-semibold hover:underline"
+            className="text-[var(--text)] font-semibold hover:underline"
           >
             로그인
           </Link>

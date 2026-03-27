@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePlannerStore } from "@/store/plannerStore";
+import { useSettingsStore } from "@/store/settingsStore";
 import { useEvents } from "@/lib/hooks/useEvents";
 import { useCategories } from "@/lib/hooks/useCategories";
 import { useScrollToNow } from "@/lib/hooks/useScrollToNow";
@@ -21,7 +22,13 @@ import type { Event } from "@/types";
 import type { EventPayload } from "@/lib/hooks/useEvents";
 
 export default function AppPage() {
-  const { viewMode, currentDate, navigate } = usePlannerStore();
+  const { viewMode, currentDate, navigate, setViewMode } = usePlannerStore();
+  const { defaultView } = useSettingsStore();
+
+  useEffect(() => {
+    setViewMode(defaultView);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const { events, loading, addEvent, updateEvent, deleteEvent } = useEvents(
     currentDate,
     viewMode,

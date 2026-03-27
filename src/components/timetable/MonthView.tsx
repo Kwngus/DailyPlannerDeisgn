@@ -1,6 +1,7 @@
 "use client";
 
 import { usePlannerStore } from "@/store/plannerStore";
+import { useSettingsStore } from "@/store/settingsStore";
 import { useMonthEvents } from "@/lib/hooks/useMonthEvents";
 import { minToTime } from "@/lib/timeUtils";
 import dayjs from "dayjs";
@@ -8,7 +9,8 @@ import "dayjs/locale/ko";
 
 dayjs.locale("ko");
 
-const DOW = ["일", "월", "화", "수", "목", "금", "토"];
+const DOW_SUN = ["일", "월", "화", "수", "목", "금", "토"];
+const DOW_MON = ["월", "화", "수", "목", "금", "토", "일"];
 
 type Props = {
   currentDate: string;
@@ -24,16 +26,27 @@ function hexToRgba(hex: string, alpha: number) {
 
 export default function MonthView({ currentDate }: Props) {
   const { setViewMode, setCurrentDate } = usePlannerStore();
+  const { weekStart, timeFormat } = useSettingsStore();
   const { events, todos, loading } = useMonthEvents(currentDate);
+
+  const DOW = weekStart === "mon" ? DOW_MON : DOW_SUN;
 
   const today = dayjs().format("YYYY-MM-DD");
   const startOfMonth = dayjs(currentDate).startOf("month");
   const endOfMonth = dayjs(currentDate).endOf("month");
 
-  // 달력 시작: 해당 월 1일이 포함된 주의 일요일
-  const calStart = startOfMonth.startOf("week");
-  // 달력 끝: 해당 월 마지막 날이 포함된 주의 토요일
-  const calEnd = endOfMonth.endOf("week");
+  // 달력 시작: weekStart에 따라 조정
+  const calStart = weekStart === "mon"
+    ? (startOfMonth.day() === 0
+        ? startOfMonth.subtract(6, "day")
+        : startOfMonth.subtract(startOfMonth.day() - 1, "day"))
+    : startOfMonth.startOf("week");
+  // 달력 끝: weekStart에 따라 조정
+  const calEnd = weekStart === "mon"
+    ? (endOfMonth.day() === 0
+        ? endOfMonth
+        : endOfMonth.add(7 - endOfMonth.day(), "day"))
+    : endOfMonth.endOf("week");
 
   // 달력에 표시할 날짜 배열 생성
   const days: dayjs.Dayjs[] = [];
@@ -57,15 +70,19 @@ export default function MonthView({ currentDate }: Props) {
     <div className="rounded-2xl border overflow-hidden mx-4 bg-[var(--surface)] border-[var(--border)]">
       {/* 요일 헤더 */}
       <div className="grid grid-cols-7 border-b-2 border-[var(--border)]">
-        {DOW.map((d, i) => (
-          <div
-            key={d}
-            className={`py-2.5 text-center text-xs font-bold tracking-widest uppercase
-              ${i === 0 ? "text-red-400" : i === 6 ? "text-blue-400" : "text-gray-400"}`}
-          >
-            {d}
-          </div>
-        ))}
+        {DOW.map((d, i) => {
+          const isSunCol = weekStart === "mon" ? i === 6 : i === 0;
+          const isSatCol = weekStart === "mon" ? i === 5 : i === 6;
+          return (
+            <div
+              key={d}
+              className={`py-2.5 text-center text-xs font-bold tracking-widest uppercase
+                ${isSunCol ? "text-red-400" : isSatCol ? "text-blue-400" : "text-gray-400"}`}
+            >
+              {d}
+            </div>
+          );
+        })}
       </div>
 
       {/* 날짜 그리드 */}
@@ -139,9 +156,9 @@ export default function MonthView({ currentDate }: Props) {
                             borderLeft: `2px solid ${ev.category?.color ?? "#FFD250"}`,
                           }}
                           onClick={(e) => e.stopPropagation()}
-                          title={`${minToTime(ev.start_min)} ${ev.title}`}
+                          title={`${minToTime(ev.start_min, timeFormat)} ${ev.title}`}
                         >
-                          {minToTime(ev.start_min)} {ev.title}
+                          {minToTime(ev.start_min, timeFormat)} {ev.title}
                         </div>
                       ))}
 

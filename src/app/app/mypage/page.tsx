@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from "@/lib/supabaseServer";
+import MypageClient from "./MypageClient";
 
 export default async function MyPage() {
   const supabase = await createServerSupabaseClient();
@@ -6,26 +7,38 @@ export default async function MyPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  return (
-    <div className="max-w-md mx-auto px-4 py-6">
-      <h2 className="font-serif text-2xl mb-6">마이페이지</h2>
+  const today = new Date();
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 7);
 
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-        <div className="w-16 h-16 bg-[#1A1714] rounded-full flex items-center justify-center mx-auto">
-          <span className="text-white text-2xl font-serif">
-            {user?.email?.[0].toUpperCase() ?? "?"}
-          </span>
-        </div>
-        <p className="text-center text-sm text-gray-500">{user?.email}</p>
-        <div className="border-t border-gray-100 pt-4">
-          <p className="text-xs text-gray-400 text-center">
-            가입일:{" "}
-            {user?.created_at
-              ? new Date(user.created_at).toLocaleDateString("ko-KR")
-              : "-"}
-          </p>
-        </div>
-      </div>
-    </div>
+  const [eventsRes, todosRes, heatmapRes] = await Promise.all([
+    supabase
+      .from("events")
+      .select("id, date, category_id, category:categories(name, color)")
+      .gte("date", weekAgo.toISOString().slice(0, 10))
+      .eq("user_id", user?.id ?? ""),
+    supabase
+      .from("todos")
+      .select("id, is_done, category_id")
+      .eq("user_id", user?.id ?? ""),
+    supabase
+      .from("events")
+      .select("date")
+      .gte(
+        "date",
+        new Date(today.getTime() - 83 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10),
+      )
+      .eq("user_id", user?.id ?? ""),
+  ]);
+
+  return (
+    <MypageClient
+      user={user}
+      weekEvents={eventsRes.data ?? []}
+      todos={todosRes.data ?? []}
+      heatmapDates={(heatmapRes.data ?? []).map((e) => e.date)}
+    />
   );
 }

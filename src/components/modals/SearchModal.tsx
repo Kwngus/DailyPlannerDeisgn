@@ -6,6 +6,7 @@ import { Search, X, Calendar, CheckSquare } from "lucide-react";
 import { useSearch } from "@/lib/hooks/useSearch";
 import { useCategories } from "@/lib/hooks/useCategories";
 import { usePlannerStore } from "@/store/plannerStore";
+import { useSettingsStore } from "@/store/settingsStore";
 import { minToTime } from "@/lib/timeUtils";
 import type { Event, Category } from "@/types";
 import dayjs from "dayjs";
@@ -52,6 +53,7 @@ export default function SearchModal({ isOpen, onClose, onEventClick }: Props) {
   const { query, results, loading, search, clear } = useSearch();
   const { categories } = useCategories();
   const { setCurrentDate, setViewMode } = usePlannerStore();
+  const { timeFormat } = useSettingsStore();
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
@@ -267,7 +269,7 @@ export default function SearchModal({ isOpen, onClose, onEventClick }: Props) {
                             style={{ color: "var(--text-muted)" }}
                           >
                             {dayjs(ev.date).format("M월 D일 dddd")} ·{" "}
-                            {minToTime(ev.start_min)}–{minToTime(ev.end_min)}
+                            {minToTime(ev.start_min, timeFormat)}–{minToTime(ev.end_min, timeFormat)}
                           </span>
                           {ev.category && (
                             <span

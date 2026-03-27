@@ -1,7 +1,8 @@
 'use client';
 
 import { useRef } from 'react';
-import { HOURS, ROW_HEIGHT, getWeekDates, isToday, getSegmentsForHour, getNotesForHour } from '@/lib/timeUtils';
+import { getHours, ROW_HEIGHT, getWeekDates, isToday, getSegmentsForHour, getNotesForHour } from '@/lib/timeUtils';
+import { useSettingsStore } from '@/store/settingsStore';
 import EventBlock from './EventBlock';
 import NoteBlock from './NoteBlock';
 import NowLine from './NowLine';
@@ -25,7 +26,9 @@ type Props = {
 export default function WeekView({
   currentDate, events, onEventClick, onCellClick, onDragCreate,
 }: Props) {
-  const weekDates = getWeekDates(currentDate);
+  const HOURS = getHours();
+  const { weekStart } = useSettingsStore();
+  const weekDates = getWeekDates(currentDate, weekStart);
   const colRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const { dragState, isLongPressed, onMouseDown, onMouseMove, onMouseUp, onMouseLeave } =

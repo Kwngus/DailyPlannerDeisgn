@@ -2,6 +2,7 @@
 
 import type { Event } from "@/types";
 import { minToTime } from "@/lib/timeUtils";
+import { useSettingsStore } from "@/store/settingsStore";
 
 type Props = {
   event: Event;
@@ -22,6 +23,7 @@ function hexToRgba(hex: string, alpha: number): string {
 const FALLBACK = { bg: "rgba(255,210,80,0.45)", border: "rgba(200,160,0,0.7)" };
 
 export default function EventBlock({ event, leftPct, widthPct, isFirst, onClick }: Props) {
+  const { timeFormat } = useSettingsStore();
   const cancelled = event.is_cancelled ?? false;
   const color = event.category?.color
     ? {
@@ -55,7 +57,7 @@ export default function EventBlock({ event, leftPct, widthPct, isFirst, onClick 
             {event.title}
           </div>
           <div className="text-[0.65rem] opacity-60 leading-tight whitespace-nowrap">
-            {minToTime(event.start_min)}–{minToTime(event.end_min)}
+            {minToTime(event.start_min, timeFormat)}–{minToTime(event.end_min, timeFormat)}
           </div>
         </>
       )}
