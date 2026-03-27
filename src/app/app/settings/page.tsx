@@ -1,38 +1,23 @@
 "use client";
 
+import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import { LogOut, Sun, Moon, Monitor } from "lucide-react";
-import { useThemeStore } from "@/store/themeStore";
+import { LogOut } from "lucide-react";
+import { useThemeStore, BG_THEMES, POINT_COLORS } from "@/store/themeStore";
+import type { BgThemeId, PointColorId } from "@/store/themeStore";
 import { useSettingsStore } from "@/store/settingsStore";
-import type {
-  TimeFormat,
-  WeekStart,
-  FontSize,
-  DefaultView,
-} from "@/store/settingsStore";
+import type { TimeFormat, WeekStart, FontSize, DefaultView } from "@/store/settingsStore";
 
 type Theme = "light" | "dark" | "system";
 
-const SECTION = ({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) => (
+const SECTION = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div
     className="rounded-2xl border overflow-hidden mb-4"
     style={{ background: "var(--surface)", borderColor: "var(--border)" }}
   >
-    <div
-      className="px-5 py-3 border-b"
-      style={{ borderColor: "var(--border)" }}
-    >
-      <p
-        className="text-xs font-bold uppercase tracking-widest"
-        style={{ color: "var(--text-muted)" }}
-      >
+    <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border)" }}>
+      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
         {title}
       </p>
     </div>
@@ -42,30 +27,16 @@ const SECTION = ({
   </div>
 );
 
-const ROW = ({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) => (
+const ROW = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="flex items-center justify-between px-5 py-4">
-    <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
-      {label}
-    </span>
+    <span className="text-sm font-medium" style={{ color: "var(--text)" }}>{label}</span>
     <div className="flex items-center gap-1">{children}</div>
   </div>
 );
 
 const CHIPS = <T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: { value: T; label: string }[];
-  value: T;
-  onChange: (v: T) => void;
-}) => (
+  options, value, onChange,
+}: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) => (
   <div className="flex gap-1">
     {options.map((o) => (
       <button
@@ -83,22 +54,48 @@ const CHIPS = <T extends string>({
   </div>
 );
 
+/** 배경 테마 미니 프리뷰 */
+function ThemePreview({ id }: { id: BgThemeId }) {
+  const t = BG_THEMES[id];
+  return (
+    <div
+      className="w-full rounded-lg overflow-hidden flex"
+      style={{ background: t.bg, height: "52px" }}
+    >
+      {/* 사이드바 */}
+      <div className="w-3.5 h-full flex-shrink-0" style={{ background: t.accent }} />
+      {/* 콘텐츠 */}
+      <div className="flex-1 p-1.5 flex flex-col justify-center gap-1">
+        <div
+          className="w-3/4 h-1.5 rounded-full"
+          style={{ background: t.accent, opacity: 0.5 }}
+        />
+        <div
+          className="w-full h-2.5 rounded"
+          style={{ background: t.accent, opacity: 0.2 }}
+        />
+        <div
+          className="w-5/6 h-2.5 rounded"
+          style={{ background: t.accent, opacity: 0.15 }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const supabase = createClient();
-  const { theme, setTheme } = useThemeStore();
+  const { theme, setTheme, bgTheme, setBgTheme, pointColor, setPointColor, customPointColor, setCustomPointColor } = useThemeStore();
   const {
-    defaultView,
-    setDefaultView,
-    weekStart,
-    setWeekStart,
-    timeFormat,
-    setTimeFormat,
-    fontSize,
-    setFontSize,
-    timetableStart,
-    setTimetableStart,
+    defaultView, setDefaultView,
+    weekStart, setWeekStart,
+    timeFormat, setTimeFormat,
+    fontSize, setFontSize,
+    timetableStart, setTimetableStart,
   } = useSettingsStore();
+
+  const colorInputRef = useRef<HTMLInputElement>(null);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -108,9 +105,7 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
-      <h2 className="font-serif text-2xl mb-6" style={{ color: "var(--text)" }}>
-        설정
-      </h2>
+      <h2 className="font-serif text-2xl mb-6" style={{ color: "var(--text)" }}>설정</h2>
 
       {/* 화면 */}
       <SECTION title="화면">
@@ -135,19 +130,128 @@ export default function SettingsPage() {
             value={fontSize}
             onChange={(v) => {
               setFontSize(v);
-              const sizeMap = {
-                small: "1rem",
-                medium: "1.125rem",
-                large: "1.25rem",
-              };
-              document.documentElement.style.setProperty(
-                "--base-font-size",
-                sizeMap[v],
-              );
+              const sizeMap = { small: "1rem", medium: "1.125rem", large: "1.25rem" };
+              document.documentElement.style.setProperty("--base-font-size", sizeMap[v]);
             }}
           />
         </ROW>
       </SECTION>
+
+      {/* 배경 테마 */}
+      <div
+        className="rounded-2xl border overflow-hidden mb-4"
+        style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+      >
+        <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border)" }}>
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
+            배경 테마
+          </p>
+        </div>
+        <div className="px-4 py-4">
+          <div className="grid grid-cols-2 gap-3">
+            {(Object.keys(BG_THEMES) as BgThemeId[]).map((id) => {
+              const t = BG_THEMES[id];
+              const isSelected = bgTheme === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setBgTheme(id)}
+                  className="text-left rounded-xl overflow-hidden transition-all"
+                  style={{
+                    border: isSelected ? "2px solid var(--point)" : "2px solid transparent",
+                    outline: isSelected ? "none" : undefined,
+                    boxShadow: isSelected ? "0 0 0 1px var(--point)" : "0 0 0 1px var(--border)",
+                  }}
+                >
+                  <ThemePreview id={id} />
+                  <div
+                    className="px-2.5 py-2"
+                    style={{ background: t.bg }}
+                  >
+                    <p className="text-xs font-semibold" style={{ color: t.accent }}>
+                      {t.label} {id === "cream" ? "✦" : ""}
+                    </p>
+                    <p className="text-[10px] mt-0.5" style={{ color: t.accent, opacity: 0.6 }}>
+                      {t.desc}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* 포인트 컬러 */}
+      <div
+        className="rounded-2xl border overflow-hidden mb-4"
+        style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+      >
+        <div className="px-5 py-3 border-b" style={{ borderColor: "var(--border)" }}>
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
+            포인트 컬러
+          </p>
+        </div>
+        <div className="px-4 py-4">
+          <div className="flex flex-wrap gap-3">
+            {(Object.keys(POINT_COLORS) as PointColorId[]).map((id) => {
+              const p = POINT_COLORS[id];
+              const isSelected = pointColor === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setPointColor(id)}
+                  className="flex flex-col items-center gap-1"
+                  title={p.label}
+                >
+                  <div
+                    className="w-8 h-8 rounded-full transition-all"
+                    style={{
+                      background: p.point,
+                      boxShadow: isSelected
+                        ? `0 0 0 2px var(--surface), 0 0 0 4px ${p.point}`
+                        : "none",
+                      transform: isSelected ? "scale(1.15)" : "scale(1)",
+                    }}
+                  />
+                  <span className="text-[9px]" style={{ color: "var(--text-muted)" }}>
+                    {p.label}
+                  </span>
+                </button>
+              );
+            })}
+
+            {/* 직접 입력 */}
+            <button
+              className="flex flex-col items-center gap-1"
+              onClick={() => colorInputRef.current?.click()}
+              title="직접 입력"
+            >
+              <div
+                className="w-8 h-8 rounded-full transition-all flex items-center justify-center text-sm"
+                style={{
+                  background: pointColor === "custom" ? customPointColor : "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)",
+                  boxShadow: pointColor === "custom"
+                    ? `0 0 0 2px var(--surface), 0 0 0 4px ${customPointColor}`
+                    : "none",
+                  transform: pointColor === "custom" ? "scale(1.15)" : "scale(1)",
+                }}
+              />
+              <span className="text-[9px]" style={{ color: "var(--text-muted)" }}>직접 입력</span>
+              <input
+                ref={colorInputRef}
+                type="color"
+                value={customPointColor}
+                onChange={(e) => {
+                  setCustomPointColor(e.target.value);
+                  setPointColor("custom");
+                }}
+                className="sr-only"
+              />
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* 플래너 */}
       <SECTION title="플래너">
@@ -193,10 +297,7 @@ export default function SettingsPage() {
               onChange={(e) => setTimetableStart(Number(e.target.value))}
               className="w-28"
             />
-            <span
-              className="text-sm font-semibold w-10 text-right"
-              style={{ color: "var(--text)" }}
-            >
+            <span className="text-sm font-semibold w-10 text-right" style={{ color: "var(--text)" }}>
               {String(timetableStart).padStart(2, "0")}:00
             </span>
           </div>

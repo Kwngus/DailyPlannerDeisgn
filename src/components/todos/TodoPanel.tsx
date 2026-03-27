@@ -125,7 +125,7 @@ export default function TodoPanel() {
         </div>
         <button
           onClick={openAdd}
-          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={{ background: "var(--point)", color: "var(--point-fg)" }}
         >
           <Plus size={16} />
         </button>

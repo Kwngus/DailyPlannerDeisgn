@@ -53,7 +53,7 @@ export default function DayView({
           <div
             className={`text-base font-serif leading-tight mt-0.5 ${
               isToday(dateStr)
-                ? 'w-6 h-6 rounded-full flex items-center justify-center mx-auto text-xs [background:var(--accent)] [color:var(--accent-fg)]'
+                ? 'w-6 h-6 rounded-full flex items-center justify-center mx-auto text-xs [background:var(--point)] [color:var(--point-fg)]'
                 : ''
             }`}
           >

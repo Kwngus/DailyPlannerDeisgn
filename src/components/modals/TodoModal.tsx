@@ -219,7 +219,7 @@ export default function TodoModal({
           <button
             onClick={handleSave}
             className="flex-[2] py-2.5 rounded-xl text-sm font-semibold transition-colors"
-            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+            style={{ background: "var(--point)", color: "var(--point-fg)" }}
           >
             저장
           </button>

@@ -137,7 +137,7 @@ export default function MonthView({ currentDate }: Props) {
                                     ? "text-gray-800 dark:text-gray-200"
                                     : "text-gray-300 dark:text-gray-600"
                           }`}
-                        style={isToday ? { background: "var(--accent)", color: "var(--accent-fg)" } : undefined}
+                        style={isToday ? { background: "var(--point)", color: "var(--point-fg)" } : undefined}
                       >
                         {day.date()}
                       </span>

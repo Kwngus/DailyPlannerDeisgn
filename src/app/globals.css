@@ -40,6 +40,8 @@ html {
   --accent: #1A1714;
   --accent-hover: #3D3430;
   --accent-fg: #F7F5F0;
+  --point: #1A1714;
+  --point-fg: #FFFFFF;
 }
 
 /* 다크 모드 */

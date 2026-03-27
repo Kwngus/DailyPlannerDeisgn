@@ -108,9 +108,10 @@ export default function Header({
                 onClick={() => setViewMode(mode)}
                 className={`px-2.5 py-1 rounded-md text-xs font-bold tracking-widest uppercase transition-all ${
                   viewMode === mode
-                    ? "bg-white text-gray-900 shadow-sm"
+                    ? "shadow-sm"
                     : "text-gray-400 hover:text-gray-700"
                 }`}
+                style={viewMode === mode ? { background: "var(--point)", color: "var(--point-fg)" } : undefined}
               >
                 {mode === "day" ? "DAY" : mode === "week" ? "WEEK" : "MON"}
               </button>
