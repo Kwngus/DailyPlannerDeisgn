@@ -4,13 +4,16 @@ import { useState, useEffect } from "react";
 import { useEscClose } from "@/lib/hooks/useEscClose";
 import { X, Trash2 } from "lucide-react";
 import { minToTime, timeToMin } from "@/lib/timeUtils";
+import dayjs from "dayjs";
 import type { Event, Category, RecurrenceType } from "@/types";
 import type { EventPayload } from "@/lib/hooks/useEvents";
+
+export type UpdateMode = "single" | "future" | "all";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (payload: EventPayload) => void;
+  onSave: (payload: EventPayload, updateMode?: UpdateMode) => void;
   onDelete?: (deleteAll: boolean) => void;
   categories: Category[];
   defaultDate: string;
@@ -49,9 +52,12 @@ export default function EventModal({
   const [isAllday, setIsAllday] = useState(false);
   const [isCancelled, setIsCancelled] = useState(false);
   const [recurrence, setRecurrence] = useState<RecurrenceType>("none");
+  const [recurrenceDays, setRecurrenceDays] = useState<number[]>([]);
   const [recurrenceEnd, setRecurrenceEnd] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<EventPayload | null>(null);
 
   useEffect(() => {
     if (editingEvent) {
@@ -65,6 +71,7 @@ export default function EventModal({
       setIsAllday(editingEvent.is_allday ?? false);
       setIsCancelled(editingEvent.is_cancelled ?? false);
       setRecurrence(editingEvent.recurrence_type ?? "none");
+      setRecurrenceDays(editingEvent.recurrence_days ?? []);
       setRecurrenceEnd(editingEvent.recurrence_end_date ?? "");
     } else {
       setTitle("");
@@ -83,11 +90,27 @@ export default function EventModal({
       setIsAllday(false);
       setIsCancelled(false);
       setRecurrence("none");
+      setRecurrenceDays([]);
       setRecurrenceEnd("");
     }
     setError(null);
     setShowDeleteConfirm(false);
+    setShowUpdateConfirm(false);
+    setPendingPayload(null);
   }, [isOpen, editingEvent, defaultDate, defaultHour, defaultStartMin, defaultEndMin]);
+
+  function handleRecurrenceChange(val: RecurrenceType) {
+    setRecurrence(val);
+    if (val === "weekly" && recurrenceDays.length === 0) {
+      setRecurrenceDays([dayjs(date).day()]);
+    }
+  }
+
+  function toggleRecurrenceDay(day: number) {
+    setRecurrenceDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort(),
+    );
+  }
 
   function handleSave() {
     if (!title.trim()) {
@@ -100,8 +123,12 @@ export default function EventModal({
       setError("종료 시간은 시작 시간보다 늦어야 해요.");
       return;
     }
+    if (recurrence === "weekly" && recurrenceDays.length === 0) {
+      setError("반복 요일을 하나 이상 선택해주세요.");
+      return;
+    }
 
-    onSave({
+    const payload: EventPayload = {
       title: title.trim(),
       note,
       date,
@@ -112,8 +139,24 @@ export default function EventModal({
       is_allday: isAllday,
       is_cancelled: isCancelled,
       recurrence_type: recurrence,
+      recurrence_days: recurrence === "weekly" ? recurrenceDays : null,
       recurrence_end_date: recurrenceEnd || null,
-    });
+    };
+
+    // 반복 일정 수정 시 선택 다이얼로그
+    if (editingEvent?.recurrence_group_id) {
+      setPendingPayload(payload);
+      setShowUpdateConfirm(true);
+      return;
+    }
+
+    onSave(payload);
+    onClose();
+  }
+
+  function handleUpdateConfirm(mode: UpdateMode) {
+    if (!pendingPayload) return;
+    onSave(pendingPayload, mode);
     onClose();
   }
 
@@ -156,8 +199,38 @@ export default function EventModal({
           </div>
         </div>
 
-        {/* 삭제 확인 (반복 일정인 경우) */}
-        {showDeleteConfirm && editingEvent?.recurrence_group_id ? (
+        {/* 수정 범위 선택 (반복 일정인 경우) */}
+        {showUpdateConfirm ? (
+          <div className="px-6 py-6 space-y-3">
+            <p className="text-sm font-semibold text-gray-700">
+              어떤 일정을 수정할까요?
+            </p>
+            <button
+              onClick={() => handleUpdateConfirm("single")}
+              className="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-medium hover:bg-gray-50 transition-colors text-left px-4"
+            >
+              이 일정만 수정
+            </button>
+            <button
+              onClick={() => handleUpdateConfirm("future")}
+              className="w-full py-2.5 rounded-xl border border-gray-200 text-sm font-medium hover:bg-gray-50 transition-colors text-left px-4"
+            >
+              이 일정 이후 모두 수정
+            </button>
+            <button
+              onClick={() => handleUpdateConfirm("all")}
+              className="w-full py-2.5 rounded-xl border border-[var(--point)] text-sm font-medium text-[var(--point)] hover:opacity-80 transition-colors text-left px-4"
+            >
+              반복 일정 전체 수정
+            </button>
+            <button
+              onClick={() => setShowUpdateConfirm(false)}
+              className="w-full py-2.5 rounded-xl bg-gray-100 text-sm font-medium text-gray-500 hover:bg-gray-200 transition-colors"
+            >
+              취소
+            </button>
+          </div>
+        ) : showDeleteConfirm && editingEvent?.recurrence_group_id ? (
           <div className="px-6 py-6 space-y-3">
             <p className="text-sm font-semibold text-gray-700">
               어떤 일정을 삭제할까요?
@@ -294,7 +367,7 @@ export default function EventModal({
                   {RECURRENCE_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
-                      onClick={() => setRecurrence(opt.value)}
+                      onClick={() => handleRecurrenceChange(opt.value)}
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all ${
                         recurrence === opt.value
                           ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
@@ -305,6 +378,25 @@ export default function EventModal({
                     </button>
                   ))}
                 </div>
+
+                {/* 매주 요일 선택 */}
+                {recurrence === "weekly" && (
+                  <div className="mt-2 flex gap-1.5">
+                    {["일","월","화","수","목","금","토"].map((label, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => toggleRecurrenceDay(idx)}
+                        className={`w-8 h-8 rounded-full text-xs font-semibold border-2 transition-all ${
+                          recurrenceDays.includes(idx)
+                            ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
+                            : "border-gray-200 text-gray-500 hover:border-gray-400"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {/* 반복 종료일 */}
                 {recurrence !== "none" && (

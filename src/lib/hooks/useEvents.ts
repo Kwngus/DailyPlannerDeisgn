@@ -18,6 +18,7 @@ export type EventPayload = {
   is_allday: boolean;
   is_cancelled: boolean;
   recurrence_type: RecurrenceType;
+  recurrence_days: number[] | null;
   recurrence_end_date: string | null;
 };
 
@@ -71,6 +72,7 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
       payload.date,
       payload.recurrence_type,
       payload.recurrence_end_date,
+      payload.recurrence_days,
     );
 
     const rows = dates.map((date) => ({
@@ -85,6 +87,7 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
       is_allday: payload.is_allday,
       is_cancelled: payload.is_cancelled,
       recurrence_type: payload.recurrence_type,
+      recurrence_days: payload.recurrence_days,
       recurrence_end_date: payload.recurrence_end_date,
       recurrence_group_id: groupId,
     }));
@@ -103,26 +106,48 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
     await fetchEvents();
   }
 
-  async function updateEvent(id: string, payload: EventPayload) {
-    const { error } = await supabase
-      .from("events")
-      .update({
-        title: payload.title,
-        note: payload.note,
-        date: payload.date,
-        start_min: payload.is_allday ? 0 : payload.start_min,
-        end_min: payload.is_allday ? 0 : payload.end_min,
-        category_id: payload.category_id,
-        is_note: payload.is_note,
-        is_allday: payload.is_allday,
-        is_cancelled: payload.is_cancelled,
-      })
-      .eq("id", id);
-    if (error) {
-      show(getErrorMessage(error), "error");
-      return;
+  async function updateEvent(
+    id: string,
+    payload: EventPayload,
+    updateMode: "single" | "future" | "all" = "single",
+  ) {
+    const target = events.find((e) => e.id === id);
+
+    const commonFields = {
+      title: payload.title,
+      note: payload.note,
+      start_min: payload.is_allday ? 0 : payload.start_min,
+      end_min: payload.is_allday ? 0 : payload.end_min,
+      category_id: payload.category_id,
+      is_note: payload.is_note,
+      is_allday: payload.is_allday,
+      is_cancelled: payload.is_cancelled,
+    };
+
+    if (updateMode === "single" || !target?.recurrence_group_id) {
+      const { error } = await supabase
+        .from("events")
+        .update({ ...commonFields, date: payload.date })
+        .eq("id", id);
+      if (error) { show(getErrorMessage(error), "error"); return; }
+      show("일정이 수정됐어요 ✓");
+    } else if (updateMode === "future") {
+      const { error } = await supabase
+        .from("events")
+        .update(commonFields)
+        .eq("recurrence_group_id", target.recurrence_group_id)
+        .gte("date", target.date);
+      if (error) { show(getErrorMessage(error), "error"); return; }
+      show("이후 반복 일정이 수정됐어요 ✓");
+    } else {
+      const { error } = await supabase
+        .from("events")
+        .update(commonFields)
+        .eq("recurrence_group_id", target.recurrence_group_id);
+      if (error) { show(getErrorMessage(error), "error"); return; }
+      show("반복 일정 전체가 수정됐어요 ✓");
     }
-    show("일정이 수정됐어요 ✓");
+
     await fetchEvents();
   }
 
@@ -188,6 +213,7 @@ function generateRecurrenceDates(
   startDate: string,
   type: RecurrenceType,
   endDate: string | null,
+  recurrenceDays?: number[] | null,
 ): string[] {
   if (type === "none") return [startDate];
 
@@ -195,13 +221,25 @@ function generateRecurrenceDates(
   const end = endDate ? dayjs(endDate) : dayjs(startDate).add(3, "month");
   let current = dayjs(startDate);
 
+  // 매주 + 요일 지정
+  if (type === "weekly" && recurrenceDays && recurrenceDays.length > 0) {
+    while (current.isBefore(end) || current.isSame(end, "day")) {
+      if (recurrenceDays.includes(current.day())) {
+        dates.push(current.format("YYYY-MM-DD"));
+      }
+      current = current.add(1, "day");
+      if (dates.length > 365) break;
+    }
+    return dates;
+  }
+
   while (current.isBefore(end) || current.isSame(end, "day")) {
     dates.push(current.format("YYYY-MM-DD"));
     if (type === "daily") current = current.add(1, "day");
     else if (type === "weekly") current = current.add(1, "week");
     else if (type === "monthly") current = current.add(1, "month");
 
-    if (dates.length > 365) break; // 안전 제한
+    if (dates.length > 365) break;
   }
 
   return dates;

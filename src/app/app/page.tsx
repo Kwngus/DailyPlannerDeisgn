@@ -64,8 +64,8 @@ export default function AppPage() {
     setModalOpen(true);
   }
 
-  async function handleSave(payload: EventPayload) {
-    if (selectedEvent) await updateEvent(selectedEvent.id, payload);
+  async function handleSave(payload: EventPayload, updateMode?: "single" | "future" | "all") {
+    if (selectedEvent) await updateEvent(selectedEvent.id, payload, updateMode);
     else await addEvent(payload);
   }
 
