@@ -30,7 +30,7 @@ export default function AllDayRow({ events, onClick }: Props) {
             style={{
               background: hexToRgba(color, 0.25),
               borderLeft: `3px solid ${color}`,
-              color: color,
+              color: "var(--text)",
             }}
           >
             {event.title}
