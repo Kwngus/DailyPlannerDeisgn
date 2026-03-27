@@ -15,6 +15,7 @@ import MonthViewSkeleton from "@/components/timetable/MonthViewSkeleton";
 import EventModal from "@/components/modals/EventModal";
 import TodoPanel from "@/components/todos/TodoPanel";
 import TodoPanelSkeleton from "@/components/todos/TodoPanelSkeleton";
+import HabitPanel from "@/components/habits/HabitPanel";
 import Fab from "@/components/layout/Fab";
 import SwipeContainer from "@/components/ui/SwipeContainer";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
@@ -126,11 +127,16 @@ export default function AppPage() {
         </ErrorBoundary>
       </SwipeContainer>
 
-      {/* Todo 패널 */}
+      {/* 사이드 패널 */}
       {viewMode !== "month" && (
-        <div className="hidden lg:flex flex-col w-72 flex-shrink-0">
+        <div className="hidden lg:flex flex-col w-72 flex-shrink-0 gap-3 min-h-0">
           <ErrorBoundary>
-            {catLoading ? <TodoPanelSkeleton /> : <TodoPanel />}
+            <HabitPanel />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <div className="flex-1 min-h-0">
+              {catLoading ? <TodoPanelSkeleton /> : <TodoPanel />}
+            </div>
           </ErrorBoundary>
         </div>
       )}
