@@ -74,7 +74,7 @@ export default function DayView({
       {allDayEvents.length > 0 && (
         <div className="grid" style={{ gridTemplateColumns: '52px 1fr' }}>
           <div className="border-r border-[var(--border)] flex items-center justify-center">
-            <span className="text-[8px] font-bold tracking-widest text-gray-400 uppercase rotate-[-90deg] whitespace-nowrap">종일</span>
+            <span className="text-[8px] font-bold tracking-widest text-gray-400 uppercase whitespace-nowrap">종일</span>
           </div>
           <AllDayRow events={allDayEvents} onClick={onEventClick} />
         </div>

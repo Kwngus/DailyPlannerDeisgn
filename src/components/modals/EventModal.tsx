@@ -58,6 +58,16 @@ export default function EventModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
   const [pendingPayload, setPendingPayload] = useState<EventPayload | null>(null);
+  const [modalTab, setModalTab] = useState<"regular" | "fixed">("regular");
+
+  // 고정 일정 전용 상태
+  const [fixedDays, setFixedDays] = useState<number[]>([]);
+  const [fixedStart, setFixedStart] = useState("09:00");
+  const [fixedEnd, setFixedEnd] = useState("10:00");
+  const [fixedTitle, setFixedTitle] = useState("");
+  const [fixedNote, setFixedNote] = useState("");
+  const [fixedCategoryId, setFixedCategoryId] = useState<string | null>(null);
+  const [fixedRecurrenceEnd, setFixedRecurrenceEnd] = useState("");
 
   useEffect(() => {
     if (editingEvent) {
@@ -97,7 +107,77 @@ export default function EventModal({
     setShowDeleteConfirm(false);
     setShowUpdateConfirm(false);
     setPendingPayload(null);
+    // 고정 일정 탭 초기화
+    setModalTab("regular");
+    setFixedTitle("");
+    setFixedNote("");
+    setFixedDays([]);
+    setFixedStart("09:00");
+    setFixedEnd("10:00");
+    setFixedCategoryId(categories[0]?.id ?? null);
+    setFixedRecurrenceEnd("");
   }, [isOpen, editingEvent, defaultDate, defaultHour, defaultStartMin, defaultEndMin]);
+
+  function handleQuickCancel() {
+    if (!editingEvent) return;
+    const startMin = timeToMin(startTime);
+    const endMin = timeToMin(endTime);
+    const payload: EventPayload = {
+      title: editingEvent.title,
+      note: editingEvent.note ?? "",
+      date: editingEvent.date,
+      start_min: startMin,
+      end_min: endMin,
+      category_id: editingEvent.category_id,
+      is_note: editingEvent.is_note,
+      is_allday: editingEvent.is_allday,
+      is_cancelled: !editingEvent.is_cancelled,
+      recurrence_type: "none",
+      recurrence_days: null,
+      recurrence_end_date: null,
+    };
+    onSave(payload, "single");
+    onClose();
+  }
+
+  function handleSaveFixed() {
+    if (!fixedTitle.trim()) {
+      setError("제목을 입력해주세요.");
+      return;
+    }
+    if (fixedDays.length === 0) {
+      setError("요일을 하나 이상 선택해주세요.");
+      return;
+    }
+    const startMin = timeToMin(fixedStart);
+    const endMin = timeToMin(fixedEnd);
+    if (endMin <= startMin) {
+      setError("종료 시간은 시작 시간보다 늦어야 해요.");
+      return;
+    }
+    // 첫 번째 선택 요일에 해당하는 가장 가까운 날짜를 date로 설정
+    const today = dayjs();
+    const todayDay = today.day();
+    const firstDay = fixedDays.sort((a, b) => a - b)[0];
+    const diff = (firstDay - todayDay + 7) % 7;
+    const firstDate = today.add(diff === 0 ? 0 : diff, "day").format("YYYY-MM-DD");
+    const payload: EventPayload = {
+      title: fixedTitle.trim(),
+      note: fixedNote,
+      date: firstDate,
+      start_min: startMin,
+      end_min: endMin,
+      category_id: fixedCategoryId,
+      is_note: false,
+      is_allday: false,
+      is_cancelled: false,
+      recurrence_type: "weekly",
+      recurrence_days: fixedDays,
+      recurrence_end_date: fixedRecurrenceEnd || null,
+    };
+    onSave(payload);
+    onClose();
+  }
 
   function handleRecurrenceChange(val: RecurrenceType) {
     setRecurrence(val);
@@ -264,29 +344,177 @@ export default function EventModal({
           <>
             {/* 바디 */}
             <div className="px-6 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
-              {/* 타입 선택 */}
-              <div className="flex gap-2">
+              {/* 오늘 휴강 빠른 취소 — 반복 일정 수정 시에만 노출 */}
+              {editingEvent?.recurrence_group_id && !editingEvent.is_note && (
                 <button
-                  onClick={() => { setIsNote(false); }}
-                  className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
-                    !isNote
-                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
-                      : "border-[var(--border)] text-gray-400 hover:border-gray-400"
+                  onClick={handleQuickCancel}
+                  className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all border-2 ${
+                    editingEvent.is_cancelled
+                      ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                      : "border-dashed border-amber-300 text-amber-600 hover:bg-amber-50"
                   }`}
                 >
-                  일정
+                  {editingEvent.is_cancelled ? "↩ 휴강 취소 — 수업 복원" : "오늘 휴강 처리"}
                 </button>
-                <button
-                  onClick={() => { setIsNote(true); setIsAllday(false); }}
-                  className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
-                    isNote
-                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
-                      : "border-[var(--border)] text-gray-400 hover:border-gray-400"
-                  }`}
-                >
-                  메모
-                </button>
-              </div>
+              )}
+
+              {/* 모달 탭 — 일반 일정 / 고정 일정 */}
+              {!editingEvent && (
+                <div className="flex p-1 rounded-xl border border-[var(--border)] bg-[var(--bg)]">
+                  <button
+                    onClick={() => setModalTab("regular")}
+                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      modalTab === "regular"
+                        ? "bg-[var(--surface)] text-[var(--text)] shadow-sm"
+                        : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                    }`}
+                  >
+                    일반 일정
+                  </button>
+                  <button
+                    onClick={() => setModalTab("fixed")}
+                    className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      modalTab === "fixed"
+                        ? "bg-[var(--surface)] text-[var(--text)] shadow-sm"
+                        : "text-[var(--text-muted)] hover:text-[var(--text)]"
+                    }`}
+                  >
+                    고정 일정
+                  </button>
+                </div>
+              )}
+
+              {/* 고정 일정 폼 */}
+              {modalTab === "fixed" ? (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">제목</label>
+                    <input
+                      type="text"
+                      value={fixedTitle}
+                      onChange={(e) => setFixedTitle(e.target.value)}
+                      placeholder="예) 알고리즘, 영어회화"
+                      autoFocus
+                      className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                      요일 <span className="text-gray-300 normal-case font-normal">(복수 선택 가능)</span>
+                    </label>
+                    <div className="flex gap-1.5">
+                      {["일","월","화","수","목","금","토"].map((label, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() =>
+                            setFixedDays((prev) =>
+                              prev.includes(idx) ? prev.filter((d) => d !== idx) : [...prev, idx].sort()
+                            )
+                          }
+                          className={`flex-1 py-2 rounded-xl text-xs font-semibold border-2 transition-all ${
+                            fixedDays.includes(idx)
+                              ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
+                              : "border-[var(--border)] text-[var(--text-muted)] hover:border-gray-400"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">시작</label>
+                      <input
+                        type="time"
+                        value={fixedStart}
+                        onChange={(e) => setFixedStart(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">종료</label>
+                      <input
+                        type="time"
+                        value={fixedEnd}
+                        onChange={(e) => setFixedEnd(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                      />
+                    </div>
+                  </div>
+
+                  {categories.length > 0 && (
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">분류</label>
+                      <div className="flex flex-wrap gap-2">
+                        {categories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => setFixedCategoryId(cat.id)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all ${
+                              fixedCategoryId === cat.id ? "border-gray-800 opacity-100" : "border-transparent opacity-60"
+                            }`}
+                            style={{ background: cat.color + "99" }}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                      반복 종료일 <span className="text-gray-300 normal-case font-normal">(미설정 시 3개월)</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={fixedRecurrenceEnd}
+                      onChange={(e) => setFixedRecurrenceEnd(e.target.value)}
+                      className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">메모</label>
+                    <textarea
+                      value={fixedNote}
+                      onChange={(e) => setFixedNote(e.target.value)}
+                      placeholder="강의실, 담당 교수 등 (선택사항)"
+                      rows={2}
+                      className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors resize-none bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                    />
+                  </div>
+
+                  {error && <p className="text-red-500 text-xs text-center">{error}</p>}
+                </>
+              ) : (
+                <>
+                  {/* 일반 일정 타입 선택 (일정/메모) */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setIsNote(false)}
+                      className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
+                        !isNote
+                          ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
+                          : "border-[var(--border)] text-gray-400 hover:border-gray-400"
+                      }`}
+                    >
+                      일정
+                    </button>
+                    <button
+                      onClick={() => { setIsNote(true); setIsAllday(false); }}
+                      className={`flex-1 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
+                        isNote
+                          ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
+                          : "border-[var(--border)] text-gray-400 hover:border-gray-400"
+                      }`}
+                    >
+                      메모
+                    </button>
+                  </div>
 
               {/* 제목 */}
               <div>
@@ -472,6 +700,8 @@ export default function EventModal({
               {error && (
                 <p className="text-red-500 text-xs text-center">{error}</p>
               )}
+                </>
+              )}
             </div>
 
             {/* 푸터 */}
@@ -483,7 +713,7 @@ export default function EventModal({
                 취소
               </button>
               <button
-                onClick={handleSave}
+                onClick={modalTab === "fixed" ? handleSaveFixed : handleSave}
                 className="flex-[2] py-2.5 rounded-xl text-sm font-semibold transition-colors"
                 style={{ background: "var(--point)", color: "var(--point-fg)" }}
               >

@@ -123,9 +123,9 @@ export default function SettingsPage() {
         <ROW label="폰트 크기">
           <CHIPS<FontSize>
             options={[
-              { value: "small", label: "小" },
-              { value: "medium", label: "中" },
-              { value: "large", label: "大" },
+              { value: "small", label: "S" },
+              { value: "medium", label: "M" },
+              { value: "large", label: "L" },
             ]}
             value={fontSize}
             onChange={(v) => {

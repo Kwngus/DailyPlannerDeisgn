@@ -77,7 +77,7 @@ export default function WeekView({
       {weekDates.some((d) => events.some((e) => e.date === d && e.is_allday)) && (
         <div className="grid" style={{ gridTemplateColumns: '52px repeat(7, 1fr)' }}>
           <div className="border-r border-[var(--border)] flex items-center justify-center">
-            <span className="text-[8px] font-bold tracking-widest text-gray-400 uppercase rotate-[-90deg] whitespace-nowrap">종일</span>
+            <span className="text-[8px] font-bold tracking-widest text-gray-400 uppercase whitespace-nowrap">종일</span>
           </div>
           {weekDates.map((dateStr) => {
             const dayAllDay = events.filter((e) => e.date === dateStr && e.is_allday);
