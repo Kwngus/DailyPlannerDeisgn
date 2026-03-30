@@ -37,6 +37,7 @@ export default function Sidebar({ isOpen, onClose }: Props) {
         <div
           className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
@@ -55,9 +56,10 @@ export default function Sidebar({ isOpen, onClose }: Props) {
           <span className="font-serif text-xl tracking-wide">✦ Planner</span>
           <button
             onClick={onClose}
+            aria-label="메뉴 닫기"
             className="text-white/50 hover:text-white dark:text-[#1A1714]/50 dark:hover:text-[#1A1714] transition-colors"
           >
-            <X size={18} />
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 

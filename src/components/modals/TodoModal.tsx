@@ -85,28 +85,32 @@ export default function TodoModal({
   const isEditing = !!editingTodo;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.22s_cubic-bezier(0.34,1.56,0.64,1)] bg-[var(--surface)]">
+    <>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" aria-hidden="true" />
+    <div role="dialog" aria-modal="true" aria-labelledby="todo-modal-title" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pointer-events-none">
+      <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.22s_cubic-bezier(0.34,1.56,0.64,1)] bg-[var(--surface)] pointer-events-auto">
 
         {/* 헤더 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)]">
-          <h2 className="font-serif text-xl">
+          <h2 id="todo-modal-title" className="font-serif text-xl">
             {isEditing ? "할 일 수정" : "할 일 추가"}
           </h2>
           <div className="flex items-center gap-2">
             {isEditing && onDelete && (
               <button
                 onClick={() => { onDelete(); onClose(); }}
+                aria-label="할 일 삭제"
                 className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               >
-                <Trash2 size={16} />
+                <Trash2 size={16} aria-hidden="true" />
               </button>
             )}
             <button
               onClick={onClose}
+              aria-label="닫기"
               className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <X size={16} />
+              <X size={16} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -116,10 +120,11 @@ export default function TodoModal({
 
           {/* 제목 */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+            <label htmlFor="todo-title" className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
               할 일
             </label>
             <input
+              id="todo-title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -204,7 +209,7 @@ export default function TodoModal({
             />
           </div>
 
-          {error && <p className="text-red-500 text-xs text-center">{error}</p>}
+          {error && <p role="alert" className="text-red-500 text-xs text-center">{error}</p>}
         </div>
 
         {/* 푸터 */}
@@ -226,5 +231,6 @@ export default function TodoModal({
         </div>
       </div>
     </div>
+    </>
   );
 }

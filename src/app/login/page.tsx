@@ -40,7 +40,7 @@ export default function LoginPage() {
         <h1 className="text-3xl font-serif text-center mb-2 tracking-tight">
           ✦ Planner
         </h1>
-        <p className="text-center text-sm text-gray-500 mb-8">
+        <p className="text-center text-sm text-[var(--text-muted)] mb-8">
           오늘도 계획적인 하루를 시작해요
         </p>
 
@@ -49,10 +49,11 @@ export default function LoginPage() {
           className="rounded-2xl border p-8 shadow-sm space-y-4 bg-[var(--surface)] border-[var(--border)]"
         >
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+            <label htmlFor="login-email" className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">
               이메일
             </label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -63,10 +64,11 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+            <label htmlFor="login-password" className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">
               비밀번호
             </label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -76,7 +78,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {error && <p className="text-red-500 text-xs text-center">{error}</p>}
+          {error && <p role="alert" className="text-red-500 text-xs text-center">{error}</p>}
 
           <button
             type="submit"
@@ -88,7 +90,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-400 mt-4">
+        <p className="text-center text-sm text-[var(--text-muted)] mt-4">
           계정이 없으신가요?{" "}
           <Link
             href="/signup"

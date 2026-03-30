@@ -32,8 +32,8 @@ export default function GlobalError({ error, reset }: Props) {
         <button
           onClick={reset}
           className="flex items-center gap-2 mx-auto px-5 py-2.5 rounded-xl
-                     bg-[#1A1714] text-white text-sm font-semibold
-                     hover:bg-[#3D3430] transition-colors"
+                     text-sm font-semibold transition-colors"
+          style={{ background: "var(--point)", color: "var(--point-fg)" }}
         >
           <RefreshCw size={15} />
           다시 시도

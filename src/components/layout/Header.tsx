@@ -53,9 +53,10 @@ export default function Header({
     >
       <button
         onClick={onMenuClick}
+        aria-label="메뉴 열기"
         className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
       >
-        <Menu size={20} />
+        <Menu size={20} aria-hidden="true" />
       </button>
 
       <span className="font-serif text-lg flex-1 tracking-tight truncate">
@@ -76,24 +77,27 @@ export default function Header({
           <div className="flex items-center gap-0.5 flex-shrink-0">
             <button
               onClick={() => navigate(-1)}
+              aria-label="이전"
               className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500"
             >
-              <ChevronLeft size={18} />
+              <ChevronLeft size={18} aria-hidden="true" />
             </button>
             <button
               onClick={() => navigate(1)}
+              aria-label="다음"
               className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500"
             >
-              <ChevronRight size={18} />
+              <ChevronRight size={18} aria-hidden="true" />
             </button>
           </div>
 
           {/* 검색 버튼 */}
           <button
             onClick={onSearchClick}
+            aria-label="검색"
             className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors text-gray-500 flex-shrink-0"
           >
-            <Search size={18} />
+            <Search size={18} aria-hidden="true" />
           </button>
 
           <div className="flex gap-0.5 bg-gray-200 rounded-lg p-1 flex-shrink-0">

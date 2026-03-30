@@ -25,8 +25,8 @@ export default function NotFound() {
         <Link
           href="/app"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl
-                     bg-[#1A1714] text-white text-sm font-semibold
-                     hover:bg-[#3D3430] transition-colors"
+                     text-sm font-semibold transition-colors"
+          style={{ background: "var(--point)", color: "var(--point-fg)" }}
         >
           플래너로 돌아가기
         </Link>

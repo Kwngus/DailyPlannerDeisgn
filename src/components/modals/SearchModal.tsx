@@ -116,9 +116,11 @@ export default function SearchModal({ isOpen, onClose, onEventClick }: Props) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-start justify-center pt-16 px-4">
+    <>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" aria-hidden="true" />
+    <div role="dialog" aria-modal="true" aria-label="검색" className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 pointer-events-none">
       <div
-        className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.2s_cubic-bezier(0.34,1.56,0.64,1)]"
+        className="w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.2s_cubic-bezier(0.34,1.56,0.64,1)] pointer-events-auto"
         style={{ background: "var(--surface)" }}
       >
         {/* 검색 입력 */}
@@ -146,16 +148,18 @@ export default function SearchModal({ isOpen, onClose, onEventClick }: Props) {
                 setSelectedCategoryId(null);
                 clear();
               }}
+              aria-label="검색어 지우기"
               className="p-1 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
             >
-              <X size={14} />
+              <X size={14} aria-hidden="true" />
             </button>
           )}
           <button
             onClick={onClose}
+            aria-label="검색 닫기"
             className="p-1 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
           >
-            <X size={16} />
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
 
@@ -377,5 +381,6 @@ export default function SearchModal({ isOpen, onClose, onEventClick }: Props) {
         </div>
       </div>
     </div>
+    </>
   );
 }

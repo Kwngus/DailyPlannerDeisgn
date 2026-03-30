@@ -245,11 +245,13 @@ export default function EventModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.22s_cubic-bezier(0.34,1.56,0.64,1)] bg-[var(--surface)]">
+    <>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" aria-hidden="true" />
+    <div role="dialog" aria-modal="true" aria-labelledby="event-modal-title" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pointer-events-none">
+      <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.22s_cubic-bezier(0.34,1.56,0.64,1)] bg-[var(--surface)] pointer-events-auto">
         {/* 헤더 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)]">
-          <h2 className="font-serif text-xl">
+          <h2 id="event-modal-title" className="font-serif text-xl">
             {editingEvent
               ? isNote ? "메모 수정" : isAllday ? "종일 일정 수정" : "일정 수정"
               : isNote ? "메모 추가" : isAllday ? "종일 일정 추가" : "일정 추가"}
@@ -265,16 +267,18 @@ export default function EventModal({
                     onClose();
                   }
                 }}
+                aria-label="일정 삭제"
                 className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
               >
-                <Trash2 size={16} />
+                <Trash2 size={16} aria-hidden="true" />
               </button>
             )}
             <button
               onClick={onClose}
+              aria-label="닫기"
               className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <X size={16} />
+              <X size={16} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -724,5 +728,6 @@ export default function EventModal({
         )}
       </div>
     </div>
+    </>
   );
 }

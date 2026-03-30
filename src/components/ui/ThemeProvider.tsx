@@ -2,6 +2,16 @@
 
 import { useEffect } from "react";
 import { useThemeStore, BG_THEMES, POINT_COLORS } from "@/store/themeStore";
+import dayjs from "dayjs";
+import "dayjs/locale/ko";
+import isBetween from "dayjs/plugin/isBetween";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import duration from "dayjs/plugin/duration";
+
+dayjs.locale("ko");
+dayjs.extend(isBetween);
+dayjs.extend(isSameOrBefore);
+dayjs.extend(duration);
 
 function shadeColor(hex: string, amount: number): string {
   const clamp = (n: number) => Math.max(0, Math.min(255, n));

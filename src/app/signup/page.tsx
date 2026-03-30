@@ -45,7 +45,7 @@ export default function SignupPage() {
         <div className="text-center">
           <div className="text-4xl mb-4">📬</div>
           <h2 className="text-xl font-semibold mb-2">이메일을 확인해주세요</h2>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-[var(--text-muted)] mb-6">
             {email} 로 인증 메일을 보냈어요.
             <br />
             링크를 클릭하면 로그인할 수 있어요.
@@ -67,7 +67,7 @@ export default function SignupPage() {
         <h1 className="text-3xl font-serif text-center mb-2 tracking-tight">
           ✦ Planner
         </h1>
-        <p className="text-center text-sm text-gray-500 mb-8">
+        <p className="text-center text-sm text-[var(--text-muted)] mb-8">
           계정을 만들어 시작해요
         </p>
 
@@ -76,10 +76,11 @@ export default function SignupPage() {
           className="rounded-2xl border p-8 shadow-sm space-y-4 bg-[var(--surface)] border-[var(--border)]"
         >
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+            <label htmlFor="signup-email" className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">
               이메일
             </label>
             <input
+              id="signup-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -90,10 +91,11 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+            <label htmlFor="signup-password" className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">
               비밀번호
             </label>
             <input
+              id="signup-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -104,10 +106,11 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+            <label htmlFor="signup-confirm" className="block text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1.5">
               비밀번호 확인
             </label>
             <input
+              id="signup-confirm"
               type="password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
@@ -117,7 +120,7 @@ export default function SignupPage() {
             />
           </div>
 
-          {error && <p className="text-red-500 text-xs text-center">{error}</p>}
+          {error && <p role="alert" className="text-red-500 text-xs text-center">{error}</p>}
 
           <button
             type="submit"
@@ -129,7 +132,7 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-400 mt-4">
+        <p className="text-center text-sm text-[var(--text-muted)] mt-4">
           이미 계정이 있으신가요?{" "}
           <Link
             href="/login"
