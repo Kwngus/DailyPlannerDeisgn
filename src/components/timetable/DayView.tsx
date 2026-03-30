@@ -163,12 +163,13 @@ export default function DayView({
                     isDragging={draggingId === event.id}
                   />
                 ))}
-                {noteSegs.map(({ event, leftPct, widthPct }) => (
+                {noteSegs.map(({ event, leftPct, widthPct, isFirst }) => (
                   <NoteBlock
-                    key={event.id}
+                    key={`${event.id}-${h}`}
                     event={event}
                     leftPct={leftPct}
                     widthPct={widthPct}
+                    isFirst={isFirst}
                     onClick={onEventClick}
                   />
                 ))}

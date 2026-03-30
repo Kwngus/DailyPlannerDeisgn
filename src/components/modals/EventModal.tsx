@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useEscClose } from "@/lib/hooks/useEscClose";
 import { X, Trash2 } from "lucide-react";
+import TimePicker from "@/components/ui/TimePicker";
 import { minToTime, timeToMin } from "@/lib/timeUtils";
 import dayjs from "dayjs";
 import type { Event, Category, RecurrenceType } from "@/types";
@@ -431,21 +432,11 @@ export default function EventModal({
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">시작</label>
-                      <input
-                        type="time"
-                        value={fixedStart}
-                        onChange={(e) => setFixedStart(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
-                      />
+                      <TimePicker value={fixedStart} onChange={setFixedStart} />
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">종료</label>
-                      <input
-                        type="time"
-                        value={fixedEnd}
-                        onChange={(e) => setFixedEnd(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
-                      />
+                      <TimePicker value={fixedEnd} onChange={setFixedEnd} />
                     </div>
                   </div>
 
@@ -568,23 +559,13 @@ export default function EventModal({
                       <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
                         시작
                       </label>
-                      <input
-                        type="time"
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
-                      />
+                      <TimePicker value={startTime} onChange={setStartTime} />
                     </div>
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
                         종료
                       </label>
-                      <input
-                        type="time"
-                        value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
-                      />
+                      <TimePicker value={endTime} onChange={setEndTime} />
                     </div>
                   </>
                 )}

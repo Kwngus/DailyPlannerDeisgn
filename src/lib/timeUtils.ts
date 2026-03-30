@@ -75,20 +75,29 @@ export function getSegmentsForHour(
   return result;
 }
 
-/** 메모를 시간 행(hour)별로 필터링 + 가로 위치 반환 */
+/** 메모를 시간 행(hour)별로 분할한 세그먼트를 반환 */
 export function getNotesForHour(
   notes: Event[],
   hour: number
-): Array<{ event: Event; leftPct: number; widthPct: number }> {
-  return notes
-    .filter((n) => Math.floor(n.start_min / 60) === hour)
-    .map((n) => {
-      const durationMin = Math.min(n.end_min - n.start_min, 60 - (n.start_min % 60));
-      return {
-        event: n,
-        leftPct: ((n.start_min % 60) / 60) * 100,
-        widthPct: (durationMin / 60) * 100,
-      };
+): Array<{ event: Event; leftPct: number; widthPct: number; isFirst: boolean }> {
+  const result: Array<{ event: Event; leftPct: number; widthPct: number; isFirst: boolean }> = [];
+  for (const note of notes) {
+    const startHour = Math.floor(note.start_min / 60);
+    const endHour = Math.floor(note.end_min / 60);
+    if (hour < startHour || hour > endHour) continue;
+
+    const rowStart = hour * 60;
+    const segStart = Math.max(note.start_min, rowStart);
+    const segEnd = Math.min(note.end_min, rowStart + 60);
+    if (segEnd <= segStart) continue;
+
+    result.push({
+      event: note,
+      leftPct: ((segStart - rowStart) / 60) * 100,
+      widthPct: ((segEnd - segStart) / 60) * 100,
+      isFirst: hour === startHour,
     });
+  }
+  return result;
 }
 
