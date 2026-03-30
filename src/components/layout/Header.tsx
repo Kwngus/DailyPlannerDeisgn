@@ -3,11 +3,6 @@
 import { Menu, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { usePlannerStore } from "@/store/plannerStore";
 import dayjs from "dayjs";
-import isBetween from "dayjs/plugin/isBetween";
-import "dayjs/locale/ko";
-
-dayjs.extend(isBetween);
-dayjs.locale("ko");
 
 type Props = {
   onMenuClick: () => void;

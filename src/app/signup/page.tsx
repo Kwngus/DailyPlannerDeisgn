@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase";
+import React, { useState } from "react";
 import Link from "next/link";
 
 export default function SignupPage() {
-  const supabase = createClient();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -29,6 +26,8 @@ export default function SignupPage() {
 
     setLoading(true);
 
+    const { createClient } = await import("@/lib/supabase");
+    const supabase = createClient();
     const { error } = await supabase.auth.signUp({ email, password });
 
     if (error) {

@@ -5,9 +5,6 @@ import { useSettingsStore } from "@/store/settingsStore";
 import { useMonthEvents } from "@/lib/hooks/useMonthEvents";
 import { minToTime } from "@/lib/timeUtils";
 import dayjs from "dayjs";
-import "dayjs/locale/ko";
-
-dayjs.locale("ko");
 
 const DOW_SUN = ["일", "월", "화", "수", "목", "금", "토"];
 const DOW_MON = ["월", "화", "수", "목", "금", "토", "일"];

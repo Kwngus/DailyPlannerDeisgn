@@ -14,13 +14,8 @@ import { useCategories } from "@/lib/hooks/useCategories";
 import TodoModal from "@/components/modals/TodoModal";
 import type { Todo, Priority } from "@/types";
 import dayjs from "dayjs";
-import "dayjs/locale/ko";
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import { useDragSort } from "@/lib/hooks/useDragSort";
 import { GripVertical } from "lucide-react";
-
-dayjs.extend(isSameOrBefore);
-dayjs.locale("ko");
 
 const PRIORITY_COLOR: Record<Priority, string> = {
   high: "text-red-500",

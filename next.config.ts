@@ -1,8 +1,18 @@
 import type { NextConfig } from "next";
 
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig: NextConfig = {
   devIndicators: false,
   turbopack: {},
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
+  experimental: {
+    optimizeCss: true,
+  },
 };
 
 const isProd = process.env.NODE_ENV === "production";
@@ -40,7 +50,7 @@ if (isProd) {
       },
     ],
   });
-  module.exports = withPWA(nextConfig);
+  module.exports = withBundleAnalyzer(withPWA(nextConfig));
 } else {
-  module.exports = nextConfig;
+  module.exports = withBundleAnalyzer(nextConfig);
 }

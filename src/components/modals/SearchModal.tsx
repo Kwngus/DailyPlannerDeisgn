@@ -10,9 +10,6 @@ import { useSettingsStore } from "@/store/settingsStore";
 import { minToTime } from "@/lib/timeUtils";
 import type { Event, Category } from "@/types";
 import dayjs from "dayjs";
-import "dayjs/locale/ko";
-
-dayjs.locale("ko");
 
 type Props = {
   isOpen: boolean;

@@ -13,9 +13,6 @@ import { useDragCreate } from '@/lib/hooks/useDragCreate';
 import { useDragMove } from '@/lib/hooks/useDragMove';
 import type { Event } from '@/types';
 import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
-
-dayjs.locale('ko');
 
 const TIME_COL_WIDTH = 56; // px
 

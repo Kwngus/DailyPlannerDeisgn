@@ -1,5 +1,15 @@
 import "./globals.css";
 import ThemeProvider from "@/components/ui/ThemeProvider";
+import dayjs from "dayjs";
+import "dayjs/locale/ko";
+import isBetween from "dayjs/plugin/isBetween";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import duration from "dayjs/plugin/duration";
+
+dayjs.locale("ko");
+dayjs.extend(isBetween);
+dayjs.extend(isSameOrBefore);
+dayjs.extend(duration);
 
 export const metadata = {
   title: "Daily Planner",
@@ -32,6 +42,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" suppressHydrationWarning>
+      <head>
+        <link
+          rel="preload"
+          as="style"
+          href="/fonts/pretendardvariable-dynamic-subset.css"
+        />
+        <link
+          rel="stylesheet"
+          href="/fonts/pretendardvariable-dynamic-subset.css"
+        />
+      </head>
       <body className="font-sans antialiased">
         <ThemeProvider>{children}</ThemeProvider>
       </body>

@@ -10,11 +10,6 @@ import { usePlannerStore } from "@/store/plannerStore";
 import { minToTime } from "@/lib/timeUtils";
 import type { Event } from "@/types";
 import dayjs from "dayjs";
-import "dayjs/locale/ko";
-import duration from "dayjs/plugin/duration";
-
-dayjs.locale("ko");
-dayjs.extend(duration);
 
 function hexToRgba(hex: string, alpha: number) {
   const c = hex.replace("#", "");

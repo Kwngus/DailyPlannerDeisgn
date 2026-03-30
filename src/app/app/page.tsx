@@ -1,26 +1,44 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { usePlannerStore } from "@/store/plannerStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useEvents } from "@/lib/hooks/useEvents";
 import { useCategories } from "@/lib/hooks/useCategories";
 import { useScrollToNow } from "@/lib/hooks/useScrollToNow";
-import DayView from "@/components/timetable/DayView";
-import WeekView from "@/components/timetable/WeekView";
-import MonthView from "@/components/timetable/MonthView";
 import DayViewSkeleton from "@/components/timetable/DayViewSkeleton";
 import WeekViewSkeleton from "@/components/timetable/WeekViewSkeleton";
 import MonthViewSkeleton from "@/components/timetable/MonthViewSkeleton";
-import EventModal from "@/components/modals/EventModal";
-import TodoPanel from "@/components/todos/TodoPanel";
 import TodoPanelSkeleton from "@/components/todos/TodoPanelSkeleton";
-import HabitPanel from "@/components/habits/HabitPanel";
-import Fab from "@/components/layout/Fab";
 import SwipeContainer from "@/components/ui/SwipeContainer";
 import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import type { Event } from "@/types";
 import type { EventPayload } from "@/lib/hooks/useEvents";
+
+const DayView = dynamic(() => import("@/components/timetable/DayView"), {
+  loading: () => <DayViewSkeleton />,
+  ssr: false,
+});
+const WeekView = dynamic(() => import("@/components/timetable/WeekView"), {
+  loading: () => <WeekViewSkeleton />,
+  ssr: false,
+});
+const MonthView = dynamic(() => import("@/components/timetable/MonthView"), {
+  loading: () => <MonthViewSkeleton />,
+  ssr: false,
+});
+const EventModal = dynamic(() => import("@/components/modals/EventModal"), {
+  ssr: false,
+});
+const TodoPanel = dynamic(() => import("@/components/todos/TodoPanel"), {
+  loading: () => <TodoPanelSkeleton />,
+  ssr: false,
+});
+const HabitPanel = dynamic(() => import("@/components/habits/HabitPanel"), {
+  ssr: false,
+});
+const Fab = dynamic(() => import("@/components/layout/Fab"), { ssr: false });
 
 export default function AppPage() {
   const { viewMode, currentDate, navigate, setViewMode } = usePlannerStore();
