@@ -2,14 +2,37 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
+import { useSettingsStore } from "@/store/settingsStore";
+import { getWeekDates } from "@/lib/timeUtils";
+import { storePrefetched } from "@/lib/eventPrefetch";
+import dayjs from "dayjs";
 
 type Props = { destination: string };
 
 export default function SplashScreen({ destination }: Props) {
   const router = useRouter();
   const [exiting, setExiting] = useState(false);
+  const { defaultView, weekStart } = useSettingsStore();
 
   useEffect(() => {
+    // 로그인 유저의 경우 splash 표시 중 이벤트 미리 fetch
+    if (destination === "/app") {
+      const supabase = createClient();
+      const today = dayjs().format("YYYY-MM-DD");
+      const dates =
+        defaultView === "week" ? getWeekDates(today, weekStart) : [today];
+
+      supabase
+        .from("events")
+        .select("*, category:categories(*)")
+        .in("date", dates)
+        .order("start_min", { ascending: true })
+        .then(({ data }) => {
+          if (data) storePrefetched(data, dates);
+        });
+    }
+
     const fadeTimer = setTimeout(() => setExiting(true), 1800);
     const navTimer  = setTimeout(() => router.push(destination), 2200);
     return () => {

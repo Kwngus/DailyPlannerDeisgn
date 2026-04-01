@@ -4,6 +4,7 @@ import { getWeekDates } from "@/lib/timeUtils";
 import { useToastStore } from "@/store/toastStore";
 import { getErrorMessage } from "@/lib/handleError";
 import { useRealtimeEvents } from "./useRealtimeEvents";
+import { consumePrefetched } from "@/lib/eventPrefetch";
 import type { Event, ViewMode, RecurrenceType } from "@/types";
 import dayjs from "dayjs";
 
@@ -30,13 +31,13 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
   const supabase = createClient();
   const { show } = useToastStore();
 
-  const fetchEvents = useCallback(async () => {
+  const fetchEvents = useCallback(async (silent = false) => {
     if (viewMode === "month") {
       setEvents([]);
       setLoading(false);
       return;
     }
-    setLoading(true);
+    if (!silent) setLoading(true);
     const dates =
       viewMode === "week" ? getWeekDates(currentDate) : [currentDate];
     const { data, error } = await supabase
@@ -46,11 +47,22 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
       .order("start_min", { ascending: true });
 
     if (!error && data) setEvents(data as Event[]);
-    setLoading(false);
+    if (!silent) setLoading(false);
   }, [currentDate, viewMode]);
 
   useEffect(() => {
-    fetchEvents();
+    if (viewMode === "month") { setEvents([]); setLoading(false); return; }
+
+    const dates = viewMode === "week" ? getWeekDates(currentDate) : [currentDate];
+    const cached = consumePrefetched(dates);
+    if (cached) {
+      // 캐시 적중: 즉시 표시 후 백그라운드에서 조용히 갱신
+      setEvents(cached);
+      setLoading(false);
+      fetchEvents(true);
+    } else {
+      fetchEvents();
+    }
   }, [fetchEvents]);
 
   // 실시간 동기화 — 다른 기기나 탭에서 변경 시 자동 반영
