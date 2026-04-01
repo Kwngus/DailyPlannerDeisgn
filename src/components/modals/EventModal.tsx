@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useEscClose } from "@/lib/hooks/useEscClose";
-import { X, Trash2 } from "lucide-react";
+import { X, Trash2, MapPin, ChevronDown, ChevronUp, ImageIcon } from "lucide-react";
 import TimePicker from "@/components/ui/TimePicker";
 import { minToTime, timeToMin } from "@/lib/timeUtils";
+import { createClient } from "@/lib/supabase";
 import dayjs from "dayjs";
 import type { Event, Category, RecurrenceType } from "@/types";
 import type { EventPayload } from "@/lib/hooks/useEvents";
@@ -20,7 +21,7 @@ type Props = {
   defaultDate: string;
   defaultHour?: number;
   defaultStartMin?: number;
-  defaultEndMin?: number; 
+  defaultEndMin?: number;
   editingEvent?: Event | null;
 };
 
@@ -30,6 +31,18 @@ const RECURRENCE_OPTIONS: { value: RecurrenceType; label: string }[] = [
   { value: "weekly", label: "매주" },
   { value: "monthly", label: "매월" },
 ];
+
+async function uploadImage(file: File, userId: string): Promise<string | null> {
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const supabase = createClient();
+  const { error } = await supabase.storage
+    .from("event-images")
+    .upload(path, file, { upsert: false });
+  if (error) return null;
+  const { data } = supabase.storage.from("event-images").getPublicUrl(path);
+  return data.publicUrl;
+}
 
 export default function EventModal({
   isOpen,
@@ -45,6 +58,12 @@ export default function EventModal({
 }: Props) {
   const [title, setTitle] = useState("");
   const [note, setNote] = useState("");
+  const [location, setLocation] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showExtra, setShowExtra] = useState(false);
   const [date, setDate] = useState(defaultDate);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
@@ -67,13 +86,21 @@ export default function EventModal({
   const [fixedEnd, setFixedEnd] = useState("10:00");
   const [fixedTitle, setFixedTitle] = useState("");
   const [fixedNote, setFixedNote] = useState("");
+  const [fixedLocation, setFixedLocation] = useState("");
   const [fixedCategoryId, setFixedCategoryId] = useState<string | null>(null);
   const [fixedRecurrenceEnd, setFixedRecurrenceEnd] = useState("");
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editingEvent) {
       setTitle(editingEvent.title);
       setNote(editingEvent.note ?? "");
+      setLocation(editingEvent.location ?? "");
+      setImageUrl(editingEvent.image_url ?? null);
+      setImagePreview(editingEvent.image_url ?? null);
+      setImageFile(null);
+      setShowExtra(!!(editingEvent.location || editingEvent.image_url || editingEvent.note));
       setDate(editingEvent.date);
       setStartTime(minToTime(editingEvent.start_min));
       setEndTime(minToTime(editingEvent.end_min));
@@ -87,6 +114,11 @@ export default function EventModal({
     } else {
       setTitle("");
       setNote("");
+      setLocation("");
+      setImageUrl(null);
+      setImageFile(null);
+      setImagePreview(null);
+      setShowExtra(false);
       setDate(defaultDate);
       if (defaultStartMin !== undefined && defaultEndMin !== undefined) {
         setStartTime(minToTime(defaultStartMin));
@@ -112,12 +144,30 @@ export default function EventModal({
     setModalTab("regular");
     setFixedTitle("");
     setFixedNote("");
+    setFixedLocation("");
     setFixedDays([]);
     setFixedStart("09:00");
     setFixedEnd("10:00");
     setFixedCategoryId(categories[0]?.id ?? null);
     setFixedRecurrenceEnd("");
   }, [isOpen, editingEvent, defaultDate, defaultHour, defaultStartMin, defaultEndMin]);
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImageUrl(null);
+    const reader = new FileReader();
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function handleImageRemove() {
+    setImageFile(null);
+    setImageUrl(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
 
   function handleQuickCancel() {
     if (!editingEvent) return;
@@ -126,6 +176,8 @@ export default function EventModal({
     const payload: EventPayload = {
       title: editingEvent.title,
       note: editingEvent.note ?? "",
+      location: editingEvent.location ?? "",
+      image_url: editingEvent.image_url ?? null,
       date: editingEvent.date,
       start_min: startMin,
       end_min: endMin,
@@ -156,7 +208,6 @@ export default function EventModal({
       setError("종료 시간은 시작 시간보다 늦어야 해요.");
       return;
     }
-    // 첫 번째 선택 요일에 해당하는 가장 가까운 날짜를 date로 설정
     const today = dayjs();
     const todayDay = today.day();
     const firstDay = fixedDays.sort((a, b) => a - b)[0];
@@ -165,6 +216,8 @@ export default function EventModal({
     const payload: EventPayload = {
       title: fixedTitle.trim(),
       note: fixedNote,
+      location: fixedLocation,
+      image_url: null,
       date: firstDate,
       start_min: startMin,
       end_min: endMin,
@@ -193,7 +246,7 @@ export default function EventModal({
     );
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!title.trim()) {
       setError("제목을 입력해주세요.");
       return;
@@ -209,9 +262,22 @@ export default function EventModal({
       return;
     }
 
+    let finalImageUrl = imageUrl;
+    if (imageFile) {
+      setIsUploading(true);
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        finalImageUrl = await uploadImage(imageFile, session.user.id);
+      }
+      setIsUploading(false);
+    }
+
     const payload: EventPayload = {
       title: title.trim(),
       note,
+      location,
+      image_url: finalImageUrl,
       date,
       start_min: startMin,
       end_min: endMin,
@@ -224,7 +290,6 @@ export default function EventModal({
       recurrence_end_date: recurrenceEnd || null,
     };
 
-    // 반복 일정 수정 시 선택 다이얼로그
     if (editingEvent?.recurrence_group_id) {
       setPendingPayload(payload);
       setShowUpdateConfirm(true);
@@ -472,15 +537,37 @@ export default function EventModal({
                     />
                   </div>
 
+                  {/* 고정 일정 추가 정보 */}
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">메모</label>
-                    <textarea
-                      value={fixedNote}
-                      onChange={(e) => setFixedNote(e.target.value)}
-                      placeholder="강의실, 담당 교수 등 (선택사항)"
-                      rows={2}
-                      className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors resize-none bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowExtra((v) => !v)}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+                    >
+                      {showExtra ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                      추가 정보
+                    </button>
+                    {showExtra && (
+                      <div className="mt-3 space-y-3">
+                        <textarea
+                          value={fixedNote}
+                          onChange={(e) => setFixedNote(e.target.value)}
+                          placeholder="메모 (강의실, 담당 교수 등)"
+                          rows={3}
+                          className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors resize-none bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                        />
+                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border bg-[var(--bg)] border-[var(--border)] focus-within:border-[var(--accent)] transition-colors">
+                          <MapPin size={14} className="text-[var(--text-muted)] shrink-0" />
+                          <input
+                            type="text"
+                            value={fixedLocation}
+                            onChange={(e) => setFixedLocation(e.target.value)}
+                            placeholder="장소 추가"
+                            className="flex-1 text-sm outline-none bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)]"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {error && <p className="text-red-500 text-xs text-center">{error}</p>}
@@ -511,180 +598,269 @@ export default function EventModal({
                     </button>
                   </div>
 
-              {/* 제목 */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                  제목
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="무엇을 할 예정인가요?"
-                  autoFocus
-                  className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
-                />
-              </div>
-
-              {/* 날짜 + 시간 */}
-              <div className={`grid gap-3 ${isAllday ? "grid-cols-1" : "grid-cols-3"}`}>
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                      날짜
-                    </label>
-                    {!isNote && (
-                      <button
-                        onClick={() => setIsAllday((v) => !v)}
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
-                          isAllday
-                            ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
-                            : "border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]"
-                        }`}
-                      >
-                        종일
-                      </button>
-                    )}
-                  </div>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
-                  />
-                </div>
-                {!isAllday && (
-                  <>
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                        시작
-                      </label>
-                      <TimePicker value={startTime} onChange={setStartTime} />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                        종료
-                      </label>
-                      <TimePicker value={endTime} onChange={setEndTime} />
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* 반복 설정 */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                  반복
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {RECURRENCE_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => handleRecurrenceChange(opt.value)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all ${
-                        recurrence === opt.value
-                          ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
-                          : "border-gray-200 text-gray-500 hover:border-gray-400"
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* 매주 요일 선택 */}
-                {recurrence === "weekly" && (
-                  <div className="mt-2 flex gap-1.5">
-                    {["일","월","화","수","목","금","토"].map((label, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => toggleRecurrenceDay(idx)}
-                        className={`w-8 h-8 rounded-full text-xs font-semibold border-2 transition-all ${
-                          recurrenceDays.includes(idx)
-                            ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
-                            : "border-gray-200 text-gray-500 hover:border-gray-400"
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* 반복 종료일 */}
-                {recurrence !== "none" && (
-                  <div className="mt-3">
+                  {/* 제목 */}
+                  <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                      반복 종료일{" "}
-                      <span className="text-gray-300">(미설정 시 3개월)</span>
+                      제목
                     </label>
                     <input
-                      type="date"
-                      value={recurrenceEnd}
-                      onChange={(e) => setRecurrenceEnd(e.target.value)}
-                      min={date}
+                      type="text"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="무엇을 할 예정인가요?"
+                      autoFocus
                       className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
                     />
                   </div>
-                )}
-              </div>
 
-              {/* 분류 */}
-              {categories.length > 0 && (
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                    분류
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => setCategoryId(cat.id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all ${
-                          categoryId === cat.id
-                            ? "border-gray-800 opacity-100"
-                            : "border-transparent opacity-60"
-                        }`}
-                        style={{ background: cat.color + "99" }}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
+                  {/* 날짜 + 시간 */}
+                  <div className={`grid gap-3 ${isAllday ? "grid-cols-1" : "grid-cols-3"}`}>
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                          날짜
+                        </label>
+                        {!isNote && (
+                          <button
+                            onClick={() => setIsAllday((v) => !v)}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all ${
+                              isAllday
+                                ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
+                                : "border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--text-muted)]"
+                            }`}
+                          >
+                            종일
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                      />
+                    </div>
+                    {!isAllday && (
+                      <>
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                            시작
+                          </label>
+                          <TimePicker value={startTime} onChange={setStartTime} />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                            종료
+                          </label>
+                          <TimePicker value={endTime} onChange={setEndTime} />
+                        </div>
+                      </>
+                    )}
                   </div>
-                </div>
-              )}
 
-              {/* 메모 */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
-                  메모
-                </label>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="내용 (선택사항)"
-                  rows={2}
-                  className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors resize-none bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
-                />
-              </div>
+                  {/* 반복 설정 */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                      반복
+                    </label>
+                    <div className="flex gap-2 flex-wrap">
+                      {RECURRENCE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => handleRecurrenceChange(opt.value)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all ${
+                            recurrence === opt.value
+                              ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
+                              : "border-gray-200 text-gray-500 hover:border-gray-400"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
 
-              {/* 취소 처리 (수정 모드만) */}
-              {editingEvent && !isNote && (
-                <button
-                  onClick={() => setIsCancelled((v) => !v)}
-                  className={`w-full py-2 rounded-xl text-sm font-semibold border-2 transition-all flex items-center justify-center gap-2 ${
-                    isCancelled
-                      ? "border-gray-400 bg-gray-100 text-gray-500 line-through"
-                      : "border-[var(--border)] text-[var(--text-muted)] hover:border-gray-400"
-                  }`}
-                >
-                  <span>{isCancelled ? "취소됨 — 되돌리기" : "일정 취소 처리"}</span>
-                </button>
-              )}
+                    {/* 매주 요일 선택 */}
+                    {recurrence === "weekly" && (
+                      <div className="mt-2 flex gap-1.5">
+                        {["일","월","화","수","목","금","토"].map((label, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => toggleRecurrenceDay(idx)}
+                            className={`w-8 h-8 rounded-full text-xs font-semibold border-2 transition-all ${
+                              recurrenceDays.includes(idx)
+                                ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-fg)]"
+                                : "border-gray-200 text-gray-500 hover:border-gray-400"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
 
-              {error && (
-                <p className="text-red-500 text-xs text-center">{error}</p>
-              )}
+                    {/* 반복 종료일 */}
+                    {recurrence !== "none" && (
+                      <div className="mt-3">
+                        <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                          반복 종료일{" "}
+                          <span className="text-gray-300">(미설정 시 3개월)</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={recurrenceEnd}
+                          onChange={(e) => setRecurrenceEnd(e.target.value)}
+                          min={date}
+                          className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-gray-800 transition-colors bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 분류 */}
+                  {categories.length > 0 && (
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                        분류
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {categories.map((cat) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => setCategoryId(cat.id)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold border-2 transition-all ${
+                              categoryId === cat.id
+                                ? "border-gray-800 opacity-100"
+                                : "border-transparent opacity-60"
+                            }`}
+                            style={{ background: cat.color + "99" }}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 추가 정보 (접이식) — 메모 / 장소 / 사진 */}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setShowExtra((v) => !v)}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+                    >
+                      {showExtra ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                      추가 정보
+                      {(note || location || imagePreview) && !showExtra && (
+                        <span className="ml-1 px-1.5 py-0.5 rounded-full bg-[var(--border)] text-[10px] text-[var(--text-muted)]">
+                          {[note && "메모", location && "장소", imagePreview && "사진"].filter(Boolean).join(" · ")}
+                        </span>
+                      )}
+                    </button>
+
+                    {showExtra && (
+                      <div className="mt-3 space-y-3">
+                        {/* 메모 */}
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                            메모
+                          </label>
+                          <textarea
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            placeholder="내용을 자유롭게 적어보세요"
+                            rows={3}
+                            className="w-full px-3 py-2.5 rounded-xl border text-sm outline-none focus:border-[var(--accent)] transition-colors resize-none bg-[var(--bg)] border-[var(--border)] text-[var(--text)]"
+                          />
+                        </div>
+
+                        {/* 장소 */}
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                            장소
+                          </label>
+                          <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border bg-[var(--bg)] border-[var(--border)] focus-within:border-[var(--accent)] transition-colors">
+                            <MapPin size={14} className="text-[var(--text-muted)] shrink-0" />
+                            <input
+                              type="text"
+                              value={location}
+                              onChange={(e) => setLocation(e.target.value)}
+                              placeholder="장소를 입력하세요"
+                              className="flex-1 text-sm outline-none bg-transparent text-[var(--text)] placeholder:text-[var(--text-muted)]"
+                            />
+                          </div>
+                        </div>
+
+                        {/* 사진 */}
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-1.5">
+                            사진
+                          </label>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageSelect}
+                          />
+                          {imagePreview ? (
+                            <div className="relative rounded-xl overflow-hidden border border-[var(--border)]">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={imagePreview}
+                                alt="첨부 이미지"
+                                className="w-full max-h-52 object-cover"
+                              />
+                              <div className="absolute top-2 right-2 flex gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => fileInputRef.current?.click()}
+                                  className="p-1.5 bg-black/50 hover:bg-black/70 rounded-lg text-white transition-colors"
+                                  aria-label="사진 변경"
+                                >
+                                  <ImageIcon size={12} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={handleImageRemove}
+                                  className="p-1.5 bg-black/50 hover:bg-red-500/80 rounded-lg text-white transition-colors"
+                                  aria-label="사진 제거"
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="w-full py-6 border-2 border-dashed border-[var(--border)] rounded-xl flex flex-col items-center gap-2 text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--text)] transition-colors"
+                            >
+                              <ImageIcon size={20} />
+                              <span className="text-xs">사진을 추가하세요</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 취소 처리 (수정 모드만) */}
+                  {editingEvent && !isNote && (
+                    <button
+                      onClick={() => setIsCancelled((v) => !v)}
+                      className={`w-full py-2 rounded-xl text-sm font-semibold border-2 transition-all flex items-center justify-center gap-2 ${
+                        isCancelled
+                          ? "border-gray-400 bg-gray-100 text-gray-500 line-through"
+                          : "border-[var(--border)] text-[var(--text-muted)] hover:border-gray-400"
+                      }`}
+                    >
+                      <span>{isCancelled ? "취소됨 — 되돌리기" : "일정 취소 처리"}</span>
+                    </button>
+                  )}
+
+                  {error && (
+                    <p className="text-red-500 text-xs text-center">{error}</p>
+                  )}
                 </>
               )}
             </div>
@@ -699,10 +875,11 @@ export default function EventModal({
               </button>
               <button
                 onClick={modalTab === "fixed" ? handleSaveFixed : handleSave}
-                className="flex-[2] py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                disabled={isUploading}
+                className="flex-[2] py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60"
                 style={{ background: "var(--point)", color: "var(--point-fg)" }}
               >
-                저장
+                {isUploading ? "업로드 중…" : "저장"}
               </button>
             </div>
           </>

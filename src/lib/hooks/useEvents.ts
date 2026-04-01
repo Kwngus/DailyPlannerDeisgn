@@ -10,6 +10,8 @@ import dayjs from "dayjs";
 export type EventPayload = {
   title: string;
   note: string;
+  location: string;
+  image_url: string | null;
   date: string;
   start_min: number;
   end_min: number;
@@ -77,6 +79,8 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
       user_id: session.user.id,
       title: payload.title,
       note: payload.note,
+      location: payload.location || null,
+      image_url: payload.image_url ?? null,
       date,
       start_min: payload.is_allday ? 0 : payload.start_min,
       end_min: payload.is_allday ? 0 : payload.end_min,
@@ -123,6 +127,8 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
     const commonFields = {
       title: payload.title,
       note: payload.note,
+      location: payload.location || null,
+      image_url: payload.image_url ?? null,
       start_min: payload.is_allday ? 0 : payload.start_min,
       end_min: payload.is_allday ? 0 : payload.end_min,
       category_id: payload.category_id,
@@ -185,6 +191,8 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
         user_id: session.user.id,
         title: payload.title,
         note: payload.note,
+        location: payload.location || null,
+        image_url: payload.image_url ?? null,
         date,
         start_min: payload.is_allday ? 0 : payload.start_min,
         end_min: payload.is_allday ? 0 : payload.end_min,
@@ -278,6 +286,8 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
             user_id: session.user.id,
             title: target.title,
             note: target.note,
+            location: target.location ?? null,
+            image_url: target.image_url ?? null,
             date: target.date,
             start_min: target.start_min,
             end_min: target.end_min,

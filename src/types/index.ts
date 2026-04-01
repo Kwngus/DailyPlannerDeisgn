@@ -13,6 +13,8 @@ export type Event = {
   category?: Category;
   title: string;
   note: string | null;
+  location: string | null;
+  image_url: string | null;
   date: string;
   start_min: number;
   end_min: number;

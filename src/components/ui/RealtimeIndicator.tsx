@@ -27,7 +27,7 @@ export default function RealtimeIndicator() {
   return (
     <div
       className={`fixed top-16 left-1/2 -translate-x-1/2 z-50
-      flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold
+      relative flex items-center justify-center px-4 py-1.5 rounded-full text-xs font-semibold
       shadow-md transition-all animate-[slideUp_0.2s_ease]
       ${
         status === "connecting"
@@ -36,7 +36,7 @@ export default function RealtimeIndicator() {
       }`}
     >
       <div
-        className={`w-1.5 h-1.5 rounded-full ${
+        className={`absolute left-3 w-1.5 h-1.5 rounded-full ${
           status === "connecting" ? "bg-yellow-500 animate-pulse" : "bg-red-500"
         }`}
       />

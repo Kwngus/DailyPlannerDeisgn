@@ -29,13 +29,13 @@ export default function ToastContainer() {
             key={toast.id}
             role="status"
             aria-live="polite"
-            className={`flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg
+            className={`flex items-center justify-center gap-3 px-4 py-3 rounded-2xl shadow-lg
               pointer-events-auto min-w-[200px] max-w-[320px]
               animate-[slideUp_0.2s_cubic-bezier(0.34,1.56,0.64,1)]
               ${COLORS[toast.type]}`}
           >
             <Icon size={16} className="flex-shrink-0 opacity-90" aria-hidden="true" />
-            <span className="text-sm font-medium flex-1">{toast.message}</span>
+            <span className="text-sm font-medium text-center">{toast.message}</span>
 
             {toast.undoAction && (
               <button
