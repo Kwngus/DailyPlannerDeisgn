@@ -2,12 +2,22 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, Tag, User, Settings, X, CheckSquare, LayoutDashboard } from "lucide-react";
+import {
+  CalendarDays,
+  Tag,
+  User,
+  Settings,
+  CheckSquare,
+  LayoutDashboard,
+  LogOut,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
 };
 
 const navItems = [
@@ -19,7 +29,7 @@ const navItems = [
   { href: "/app/settings",   label: "설정",      icon: Settings     },
 ];
 
-export default function Sidebar({ isOpen, onClose }: Props) {
+export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -32,10 +42,10 @@ export default function Sidebar({ isOpen, onClose }: Props) {
 
   return (
     <>
-      {/* 오버레이 */}
+      {/* 모바일 오버레이 */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -44,27 +54,29 @@ export default function Sidebar({ isOpen, onClose }: Props) {
       {/* 사이드바 */}
       <aside
         className={`
-          fixed top-0 left-0 h-full w-56 z-50
-          flex flex-col
+          fixed top-0 left-0 h-full z-50
+          w-[70px]
+          flex flex-col items-center
+          bg-gray-50 dark:bg-[#1E1B18]
+          border-r border-gray-200 dark:border-[#38342E]
           transition-transform duration-300 ease-in-out
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          bg-[#1A1714] dark:bg-[#F0EDE8] text-[#F7F5F0] dark:text-[#1A1714]
+          ${isOpen ? "translate-x-0" : isCollapsed ? "-translate-x-full" : "-translate-x-full md:translate-x-0"}
         `}
       >
-        {/* 로고 + 닫기 */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
-          <span className="font-serif text-xl tracking-wide">✦ Planner</span>
+        {/* 로고 — 클릭 시 숨기기 */}
+        <div className="h-14 flex items-center justify-center flex-shrink-0 border-b border-gray-200 dark:border-[#38342E] w-full">
           <button
-            onClick={onClose}
-            aria-label="메뉴 닫기"
-            className="text-white/50 hover:text-white dark:text-[#1A1714]/50 dark:hover:text-[#1A1714] transition-colors"
+            onClick={onToggleCollapse}
+            title="사이드바 숨기기"
+            aria-label="사이드바 숨기기"
+            className="w-11 h-11 rounded-full flex items-center justify-center text-gray-800 dark:text-[#F0EDE8] hover:bg-gray-200 dark:hover:bg-[#38342E] transition-all duration-200 font-serif text-xl select-none"
           >
-            <X size={18} aria-hidden="true" />
+            ✦
           </button>
         </div>
 
-        {/* 네비게이션 */}
-        <nav className="flex-1 py-4">
+        {/* 네비게이션 아이콘 */}
+        <nav className="flex-1 flex flex-col items-center gap-5 py-6">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive = pathname === href;
             return (
@@ -72,30 +84,34 @@ export default function Sidebar({ isOpen, onClose }: Props) {
                 key={href}
                 href={href}
                 onClick={onClose}
+                title={label}
+                aria-label={label}
                 className={`
-                  flex items-center gap-3 px-6 py-3 text-sm font-medium
-                  transition-colors
+                  w-11 h-11 rounded-full flex items-center justify-center
+                  transition-all duration-200
                   ${
                     isActive
-                      ? "text-white bg-white/10 dark:text-[#1A1714] dark:bg-[#1A1714]/10"
-                      : "text-white/60 hover:text-white hover:bg-white/5 dark:text-[#1A1714]/60 dark:hover:text-[#1A1714] dark:hover:bg-[#1A1714]/5"
+                      ? "text-[var(--point-fg)]"
+                      : "text-gray-400 hover:bg-gray-200 dark:hover:bg-[#38342E] hover:text-gray-700 dark:hover:text-[#F0EDE8]"
                   }
                 `}
+                style={isActive ? { background: "var(--point)" } : undefined}
               >
-                <Icon size={16} />
-                {label}
+                <Icon size={18} aria-hidden="true" />
               </Link>
             );
           })}
         </nav>
 
         {/* 로그아웃 */}
-        <div className="px-6 py-5 border-t border-white/10">
+        <div className="pb-6 flex-shrink-0">
           <button
             onClick={handleLogout}
-            className="w-full text-left text-sm text-white/40 hover:text-white/70 dark:text-[#1A1714]/40 dark:hover:text-[#1A1714]/70 transition-colors"
+            title="로그아웃"
+            aria-label="로그아웃"
+            className="w-11 h-11 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-200 dark:hover:bg-[#38342E] hover:text-gray-700 dark:hover:text-[#F0EDE8] transition-all duration-200"
           >
-            로그아웃
+            <LogOut size={18} aria-hidden="true" />
           </button>
         </div>
       </aside>

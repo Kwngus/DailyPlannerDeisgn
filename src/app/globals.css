@@ -28,6 +28,32 @@ html {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@keyframes splashSymbol {
+  0%   { opacity: 0; transform: scale(0.6) rotate(-20deg); }
+  60%  { opacity: 1; transform: scale(1.08) rotate(4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+@keyframes splashTitle {
+  0%   { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes splashSub {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes splashDot {
+  0%, 100% { opacity: 0.2; transform: scaleY(0.5); }
+  50%       { opacity: 1;   transform: scaleY(1); }
+}
+
+@keyframes splashGlow {
+  0%, 100% { opacity: 0.15; }
+  50%       { opacity: 0.3; }
+}
 /* 라이트 모드 — 기존 디자인 유지 */
 :root {
   --bg: #F7F5F0;

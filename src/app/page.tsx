@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabaseServer";
+import SplashScreen from "@/components/ui/SplashScreen";
 
 export default async function RootPage() {
   const supabase = await createServerSupabaseClient();
@@ -7,6 +7,7 @@ export default async function RootPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user) redirect("/app");
-  else redirect("/login");
+  const destination = user ? "/app" : "/login";
+
+  return <SplashScreen destination={destination} />;
 }
