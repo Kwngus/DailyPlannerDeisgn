@@ -86,3 +86,75 @@ body {
   background-color: var(--bg);
   color: var(--text);
 }
+
+/* ── Glass Theme ─────────────────────────────────────────────────── */
+
+/*
+  구조: html(gradient) → body(transparent) → layout div(transparent)
+        → 각 컴포넌트(semi-transparent + backdrop-filter)
+  backdrop-filter가 동작하려면 모든 중간 레이어가 투명해야 함.
+*/
+
+/* 1. html 요소에 vivid 그라디언트 (배경 캔버스) */
+.is-glass {
+  background: linear-gradient(
+    135deg,
+    #38bdf8 0%,
+    #0284c7 55%,
+    #1d4ed8 100%
+  ) fixed;
+}
+
+/* 2. body / layout 레이어 → 완전 투명 */
+.is-glass body {
+  background: transparent !important;
+}
+
+/* 3. 헤더 — frosted glass bar */
+.is-glass header {
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.40) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.30),
+              0 4px 16px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* 4. 카드 · 모달 패널 — glass surface */
+.is-glass .rounded-2xl {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+/* 5. 작은 유리 패널 (rounded-xl) */
+.is-glass .rounded-xl {
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+
+/* 6. 세그먼티드 컨트롤 전체 래퍼 */
+.is-glass .rounded-full {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* 7. 슬라이딩 썸 (aria-hidden 표시자) */
+.is-glass div[aria-hidden="true"] {
+  background: rgba(255, 255, 255, 0.88) !important;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.14),
+              inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+}
+
+/* 8. 인풋 포커스 링 */
+.is-glass input:focus,
+.is-glass textarea:focus {
+  outline: 1px solid rgba(255, 255, 255, 0.60);
+  background: rgba(255, 255, 255, 0.30) !important;
+}
+
+/* 9. 스크롤 영역 투명 유지 */
+.is-glass main {
+  background: transparent !important;
+}

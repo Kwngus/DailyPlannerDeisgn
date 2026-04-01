@@ -5,7 +5,13 @@ type Theme = "light" | "dark" | "system";
 
 export type BgThemeId =
   | "cream" | "blossom" | "sky" | "mint"
-  | "lavender" | "peach" | "butter" | "cloud";
+  | "lavender" | "peach" | "butter" | "cloud" | "glass" | "custom";
+
+export type CustomBgTheme = {
+  bg: string;
+  surface: string;
+  accent: string;
+};
 
 export type PointColorId =
   | "charcoal" | "rose" | "blue" | "green" | "purple"
@@ -20,7 +26,7 @@ export type BgThemeDef = {
   desc: string;
 };
 
-export const BG_THEMES: Record<BgThemeId, BgThemeDef> = {
+export const BG_THEMES: Record<Exclude<BgThemeId, "custom">, BgThemeDef> = {
   cream:    { bg: "#FAF8F3", surface: "#FFFFFF", accent: "#3D3830", accentFg: "#FAF8F3", label: "크림 아이보리", desc: "기본 테마" },
   blossom:  { bg: "#FDF0F3", surface: "#FFF5F7", accent: "#8B3A52", accentFg: "#FDF0F3", label: "블러섬 핑크",  desc: "로맨틱하고 따뜻한" },
   sky:      { bg: "#EEF6FF", surface: "#F7FBFF", accent: "#1E4D7B", accentFg: "#EEF6FF", label: "스카이 블루",  desc: "청량하고 깔끔한" },
@@ -29,6 +35,7 @@ export const BG_THEMES: Record<BgThemeId, BgThemeDef> = {
   peach:    { bg: "#FEF3EE", surface: "#FFF8F5", accent: "#7A3520", accentFg: "#FEF3EE", label: "피치",        desc: "따뜻하고 생기있는" },
   butter:   { bg: "#FEFBEE", surface: "#FFFDF5", accent: "#6B4E00", accentFg: "#FEFBEE", label: "버터 옐로우", desc: "밝고 에너지 넘치는" },
   cloud:    { bg: "#F4F3F1", surface: "#FAFAF9", accent: "#444441", accentFg: "#F4F3F1", label: "클라우드 그레이", desc: "모던하고 절제된" },
+  glass:    { bg: "#ECF0FF", surface: "rgba(255,255,255,0.20)", accent: "#4338ca", accentFg: "#ffffff", label: "글래스", desc: "투명하고 입체적인" },
 };
 
 export type PointColorDef = {
@@ -55,10 +62,12 @@ type ThemeStore = {
   bgTheme: BgThemeId;
   pointColor: PointColorId | "custom";
   customPointColor: string;
+  customBgTheme: CustomBgTheme;
   setTheme: (theme: Theme) => void;
   setBgTheme: (id: BgThemeId) => void;
   setPointColor: (id: PointColorId | "custom") => void;
   setCustomPointColor: (hex: string) => void;
+  setCustomBgTheme: (t: CustomBgTheme) => void;
 };
 
 export const useThemeStore = create<ThemeStore>()(
@@ -68,10 +77,12 @@ export const useThemeStore = create<ThemeStore>()(
       bgTheme: "cream",
       pointColor: "charcoal",
       customPointColor: "#1A1714",
+      customBgTheme: { bg: "#FAF8F3", surface: "#FFFFFF", accent: "#3D3830" },
       setTheme: (theme) => set({ theme }),
       setBgTheme: (id) => set({ bgTheme: id }),
       setPointColor: (id) => set({ pointColor: id }),
       setCustomPointColor: (hex) => set({ customPointColor: hex }),
+      setCustomBgTheme: (t) => set({ customBgTheme: t }),
     }),
     { name: "planner-theme" },
   ),

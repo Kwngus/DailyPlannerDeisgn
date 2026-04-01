@@ -47,10 +47,19 @@ function ColorPicker({
         ))}
       </div>
       <div className="flex items-center gap-2">
-        <div
-          className="w-8 h-8 rounded-full flex-shrink-0 border border-[var(--border)]"
+        {/* 네이티브 컬러 피커 */}
+        <label
+          className="w-8 h-8 rounded-full flex-shrink-0 border border-[var(--border)] cursor-pointer hover:scale-110 transition-transform overflow-hidden"
+          title="색상 직접 선택"
           style={{ background: isValidHex(hexInput) ? hexInput : "#ccc" }}
-        />
+        >
+          <input
+            type="color"
+            value={isValidHex(hexInput) ? hexInput : "#cccccc"}
+            onChange={(e) => onSelectPreset(e.target.value)}
+            className="opacity-0 w-0 h-0 absolute"
+          />
+        </label>
         <input
           type="text"
           value={hexInput}

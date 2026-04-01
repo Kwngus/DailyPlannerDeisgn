@@ -12,6 +12,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase";
+import { useThemeStore } from "@/store/themeStore";
 
 type Props = {
   isOpen: boolean;
@@ -33,12 +34,19 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { bgTheme } = useThemeStore();
+  const isGlass = bgTheme === "glass";
 
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
   }
+
+  // 비활성 아이콘 hover 색
+  const iconInactive = isGlass
+    ? "text-slate-700 hover:bg-white/35 hover:text-slate-900"
+    : "text-gray-400 hover:bg-gray-200 dark:hover:bg-[#38342E] hover:text-gray-700 dark:hover:text-[#F0EDE8]";
 
   return (
     <>
@@ -57,19 +65,43 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
           fixed top-0 left-0 h-full z-50
           w-[70px]
           flex flex-col items-center
-          bg-gray-50 dark:bg-[#1E1B18]
-          border-r border-gray-200 dark:border-[#38342E]
+          ${isGlass ? "" : "bg-gray-50 dark:bg-[#1E1B18]"}
+          border-r
+          ${isGlass ? "border-white/25" : "border-gray-200 dark:border-[#38342E]"}
           transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : isCollapsed ? "-translate-x-full" : "-translate-x-full md:translate-x-0"}
         `}
+        style={
+          isGlass
+            ? {
+                background: "rgba(255, 255, 255, 0.22)",
+                backdropFilter: "blur(28px) saturate(200%)",
+                WebkitBackdropFilter: "blur(28px) saturate(200%)",
+                boxShadow:
+                  "inset -1px 0 0 rgba(255,255,255,0.40), 2px 0 20px rgba(0,0,0,0.07)",
+              }
+            : undefined
+        }
       >
         {/* 로고 — 클릭 시 숨기기 */}
-        <div className="h-14 flex items-center justify-center flex-shrink-0 border-b border-gray-200 dark:border-[#38342E] w-full">
+        <div
+          className={`h-14 flex items-center justify-center flex-shrink-0 w-full border-b ${
+            isGlass ? "border-white/20" : "border-gray-200 dark:border-[#38342E]"
+          }`}
+        >
           <button
             onClick={onToggleCollapse}
             title="사이드바 숨기기"
             aria-label="사이드바 숨기기"
-            className="w-11 h-11 rounded-full flex items-center justify-center text-gray-800 dark:text-[#F0EDE8] hover:bg-gray-200 dark:hover:bg-[#38342E] transition-all duration-200 font-serif text-xl select-none"
+            className={`
+              w-11 h-11 rounded-full flex items-center justify-center
+              transition-all duration-200 font-serif text-xl select-none
+              ${
+                isGlass
+                  ? "text-slate-800 hover:bg-white/35"
+                  : "text-gray-800 dark:text-[#F0EDE8] hover:bg-gray-200 dark:hover:bg-[#38342E]"
+              }
+            `}
           >
             ✦
           </button>
@@ -89,13 +121,18 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
                 className={`
                   w-11 h-11 rounded-full flex items-center justify-center
                   transition-all duration-200
-                  ${
-                    isActive
-                      ? "text-[var(--point-fg)]"
-                      : "text-gray-400 hover:bg-gray-200 dark:hover:bg-[#38342E] hover:text-gray-700 dark:hover:text-[#F0EDE8]"
-                  }
+                  ${isActive ? "text-[var(--point-fg)]" : iconInactive}
                 `}
-                style={isActive ? { background: "var(--point)" } : undefined}
+                style={
+                  isActive
+                    ? {
+                        background: "var(--point)",
+                        boxShadow: isGlass
+                          ? "0 2px 12px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.25)"
+                          : undefined,
+                      }
+                    : undefined
+                }
               >
                 <Icon size={18} aria-hidden="true" />
               </Link>
@@ -109,7 +146,15 @@ export default function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse
             onClick={handleLogout}
             title="로그아웃"
             aria-label="로그아웃"
-            className="w-11 h-11 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-200 dark:hover:bg-[#38342E] hover:text-gray-700 dark:hover:text-[#F0EDE8] transition-all duration-200"
+            className={`
+              w-11 h-11 rounded-full flex items-center justify-center
+              transition-all duration-200
+              ${
+                isGlass
+                  ? "text-slate-500 hover:bg-white/35 hover:text-slate-800"
+                  : "text-gray-400 hover:bg-gray-200 dark:hover:bg-[#38342E] hover:text-gray-700 dark:hover:text-[#F0EDE8]"
+              }
+            `}
           >
             <LogOut size={18} aria-hidden="true" />
           </button>

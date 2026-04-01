@@ -2,6 +2,7 @@
 
 import { Menu, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { usePlannerStore } from "@/store/plannerStore";
+import { useRouter, usePathname } from "next/navigation";
 import dayjs from "dayjs";
 
 type Props = {
@@ -17,8 +18,15 @@ export default function Header({
   showDateNav = true,
   sidebarCollapsed = false,
 }: Props) {
+  const router = useRouter();
+  const pathname = usePathname();
   const { viewMode, currentDate, setViewMode, navigate, setCurrentDate } =
     usePlannerStore();
+
+  function handleSetViewMode(mode: "day" | "week" | "month") {
+    setViewMode(mode);
+    if (pathname !== "/app") router.push("/app");
+  }
 
   const isToday = currentDate === dayjs().format("YYYY-MM-DD");
   const isThisWeek =
@@ -141,7 +149,7 @@ export default function Header({
                 {modes.map((mode) => (
                   <button
                     key={mode}
-                    onClick={() => setViewMode(mode)}
+                    onClick={() => handleSetViewMode(mode)}
                     className="relative z-10 rounded-full transition-colors duration-200"
                     style={{
                       width: 44,

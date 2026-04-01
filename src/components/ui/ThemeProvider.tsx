@@ -30,12 +30,17 @@ function getContrastFg(hex: string): string {
 }
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const { theme, bgTheme, pointColor, customPointColor } = useThemeStore();
+  const { theme, bgTheme, pointColor, customPointColor, customBgTheme } = useThemeStore();
 
   useEffect(() => {
     const root = document.documentElement;
 
     function applyTheme(isDark: boolean) {
+      // glass 잔재 항상 초기화
+      root.classList.remove("is-glass");
+      root.style.removeProperty("--text");
+      root.style.removeProperty("--text-muted");
+
       if (isDark) {
         root.classList.add("dark");
         // 다크 모드: 배경 테마 override 제거 (globals.css .dark 변수 사용)
@@ -43,13 +48,35 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
           .forEach((v) => root.style.removeProperty(v));
       } else {
         root.classList.remove("dark");
-        const t = BG_THEMES[bgTheme];
-        root.style.setProperty("--bg", t.bg);
-        root.style.setProperty("--surface", t.surface);
-        root.style.setProperty("--accent", t.accent);
-        root.style.setProperty("--accent-fg", t.accentFg);
-        root.style.setProperty("--border", shadeColor(t.bg, -14));
-        root.style.setProperty("--border-subtle", shadeColor(t.bg, -6));
+
+        if (bgTheme === "glass") {
+          root.classList.add("is-glass");
+          // transparent: 레이아웃 래퍼까지 완전 투명 → html 그라디언트가 그대로 투과됨
+          root.style.setProperty("--bg",           "transparent");
+          root.style.setProperty("--surface",       "rgba(255,255,255,0.22)");
+          root.style.setProperty("--accent",        "#4338ca");
+          root.style.setProperty("--accent-fg",     "#ffffff");
+          root.style.setProperty("--border",        "rgba(255,255,255,0.30)");
+          root.style.setProperty("--border-subtle", "rgba(255,255,255,0.14)");
+          root.style.setProperty("--text",          "#1c1917");
+          root.style.setProperty("--text-muted",    "#6b6b6b");
+        } else if (bgTheme === "custom") {
+          const { bg, surface, accent } = customBgTheme;
+          root.style.setProperty("--bg", bg);
+          root.style.setProperty("--surface", surface);
+          root.style.setProperty("--accent", accent);
+          root.style.setProperty("--accent-fg", getContrastFg(accent));
+          root.style.setProperty("--border", shadeColor(bg, -14));
+          root.style.setProperty("--border-subtle", shadeColor(bg, -6));
+        } else {
+          const t = BG_THEMES[bgTheme];
+          root.style.setProperty("--bg", t.bg);
+          root.style.setProperty("--surface", t.surface);
+          root.style.setProperty("--accent", t.accent);
+          root.style.setProperty("--accent-fg", t.accentFg);
+          root.style.setProperty("--border", shadeColor(t.bg, -14));
+          root.style.setProperty("--border-subtle", shadeColor(t.bg, -6));
+        }
       }
     }
 
@@ -62,7 +89,7 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     } else {
       applyTheme(theme === "dark");
     }
-  }, [theme, bgTheme]);
+  }, [theme, bgTheme, customBgTheme]);
 
   useEffect(() => {
     const root = document.documentElement;

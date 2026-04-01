@@ -26,10 +26,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         isCollapsed={sidebarCollapsed}
-        onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
+        onToggleCollapse={() => {
+          setSidebarCollapsed((v) => !v);
+          setSidebarOpen(false);
+        }}
       />
       <Header
-        onMenuClick={() => setSidebarOpen(true)}
+        onMenuClick={() => {
+          const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768;
+          if (isDesktop && sidebarCollapsed) {
+            setSidebarCollapsed(false);
+          } else {
+            setSidebarOpen(true);
+          }
+        }}
         onSearchClick={() => setSearchOpen(true)}
         sidebarCollapsed={sidebarCollapsed}
       />
