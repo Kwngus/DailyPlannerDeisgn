@@ -88,10 +88,10 @@ export default function TodoModal({
     <>
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" aria-hidden="true" />
     <div role="dialog" aria-modal="true" aria-labelledby="todo-modal-title" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 pointer-events-none">
-      <div className="w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-[slideUp_0.22s_cubic-bezier(0.34,1.56,0.64,1)] bg-[var(--surface)] pointer-events-auto">
+      <div className="w-full max-w-md rounded-2xl shadow-2xl flex flex-col max-h-[90svh] animate-[slideUp_0.22s_cubic-bezier(0.34,1.56,0.64,1)] bg-[var(--surface)] pointer-events-auto">
 
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)] shrink-0">
           <h2 id="todo-modal-title" className="font-serif text-xl">
             {isEditing ? "할 일 수정" : "할 일 추가"}
           </h2>
@@ -116,7 +116,7 @@ export default function TodoModal({
         </div>
 
         {/* 바디 */}
-        <div className="px-6 py-4 space-y-4">
+        <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1">
 
           {/* 제목 */}
           <div>
@@ -213,7 +213,7 @@ export default function TodoModal({
         </div>
 
         {/* 푸터 */}
-        <div className="px-6 py-4 border-t border-[var(--border-subtle)] flex gap-3">
+        <div className="px-6 py-4 border-t border-[var(--border-subtle)] flex gap-3 shrink-0">
           <button
             onClick={onClose}
             className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold
