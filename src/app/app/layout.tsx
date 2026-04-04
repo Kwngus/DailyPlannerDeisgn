@@ -7,6 +7,7 @@ import ToastContainer from "@/components/ui/ToastContainer";
 import RealtimeIndicator from "@/components/ui/RealtimeIndicator";
 import SearchModal from "@/components/modals/SearchModal";
 import { useAuthGuard } from "@/lib/hooks/useAuthGuard";
+import { useUserSettings } from "@/lib/hooks/useUserSettings";
 import type { Event } from "@/types";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -16,6 +17,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
   useAuthGuard(); // 인증 만료 감지
+  useUserSettings(); // 계정 기반 테마/설정 동기화
 
   return (
     <div
