@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, CheckCircle2, Circle, Pencil, Trash2, Check, X } from "lucide-react";
+import { Plus, CheckCircle2, Circle, Pencil, Trash2, Check, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useHabits } from "@/lib/hooks/useHabits";
 import type { HabitWithDone } from "@/types";
 
 export default function HabitPanel() {
   const { habits, loading, toggleHabit, addHabit, updateHabit, deleteHabit } = useHabits();
+  const [open, setOpen] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [addTitle, setAddTitle] = useState("");
   const [addEndDate, setAddEndDate] = useState("");
@@ -39,17 +40,21 @@ export default function HabitPanel() {
   return (
     <div className="flex flex-col rounded-2xl border bg-[var(--surface)] border-[var(--border)] flex-shrink-0">
       {/* 헤더 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)]">
-        <div>
-          <h2 className="font-serif text-base">오늘의 루틴</h2>
-          {habits.length > 0 && (
-            <p className="text-xs text-gray-400">
-              {done}/{habits.length} 완료
-            </p>
-          )}
+      <div
+        className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <div className="flex items-center gap-1.5">
+          {open ? <ChevronUp size={14} className="text-[var(--text-muted)]" /> : <ChevronDown size={14} className="text-[var(--text-muted)]" />}
+          <div>
+            <h2 className="font-serif text-base">오늘의 루틴</h2>
+            {habits.length > 0 && (
+              <p className="text-xs text-gray-400">{done}/{habits.length} 완료</p>
+            )}
+          </div>
         </div>
         <button
-          onClick={() => { setShowAddForm((v) => !v); setAddTitle(""); setAddEndDate(""); }}
+          onClick={(e) => { e.stopPropagation(); setShowAddForm((v) => !v); setAddTitle(""); setAddEndDate(""); }}
           className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
           style={{ background: "var(--point)", color: "var(--point-fg)" }}
         >
@@ -57,8 +62,11 @@ export default function HabitPanel() {
         </button>
       </div>
 
+      {/* 접혔을 때 구분선 없이 숨김 */}
+      {open && <div className="border-t border-[var(--border-subtle)]" />}
+
       {/* 인라인 추가 폼 */}
-      {showAddForm && (
+      {open && showAddForm && (
         <div className="px-3 py-2.5 border-b border-[var(--border-subtle)] space-y-2">
           <input
             type="text"
@@ -89,7 +97,7 @@ export default function HabitPanel() {
       )}
 
       {/* 루틴 목록 */}
-      <div className="overflow-y-auto max-h-52 px-3 py-2 space-y-1">
+      {open && <div className="overflow-y-auto max-h-52 px-3 py-2 space-y-1">
         {loading ? (
           <div className="flex items-center justify-center h-10">
             <div className="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
@@ -166,7 +174,7 @@ export default function HabitPanel() {
             )
           )
         )}
-      </div>
+      </div>}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   ChevronUp,
   Flag,
 } from "lucide-react";
+
 import { useTodos } from "@/lib/hooks/useTodos";
 import { useCategories } from "@/lib/hooks/useCategories";
 import TodoModal from "@/components/modals/TodoModal";
@@ -43,25 +44,25 @@ function groupByDate(todos: Todo[]) {
     groups.push({ label: "⚠️ 기한 초과", key: "overdue", todos: overdue });
 
   // 오늘
-  const todayTodos = todos.filter((t) => t.due_date === today);
+  const todayTodos = todos.filter((t) => !t.is_done && t.due_date === today);
   if (todayTodos.length > 0)
     groups.push({ label: "오늘", key: "today", todos: todayTodos });
 
   // 내일
-  const tomorrowTodos = todos.filter((t) => t.due_date === tomorrow);
+  const tomorrowTodos = todos.filter((t) => !t.is_done && t.due_date === tomorrow);
   if (tomorrowTodos.length > 0)
     groups.push({ label: "내일", key: "tomorrow", todos: tomorrowTodos });
 
   // 이번 주
   const weekEnd = dayjs().endOf("week").format("YYYY-MM-DD");
   const thisWeek = todos.filter(
-    (t) => t.due_date && t.due_date > tomorrow && t.due_date <= weekEnd,
+    (t) => !t.is_done && t.due_date && t.due_date > tomorrow && t.due_date <= weekEnd,
   );
   if (thisWeek.length > 0)
     groups.push({ label: "이번 주", key: "week", todos: thisWeek });
 
   // 이후
-  const later = todos.filter((t) => t.due_date && t.due_date > weekEnd);
+  const later = todos.filter((t) => !t.is_done && t.due_date && t.due_date > weekEnd);
   if (later.length > 0)
     groups.push({ label: "이후", key: "later", todos: later });
 
@@ -84,6 +85,7 @@ export default function TodoPanel() {
   const { categories } = useCategories();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [panelOpen, setPanelOpen] = useState(true);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({
     done: true,
   });
@@ -111,23 +113,31 @@ export default function TodoPanel() {
   return (
     <div className="flex flex-col h-full rounded-2xl border overflow-hidden bg-[var(--surface)] border-[var(--border)]">
       {/* 패널 헤더 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] flex-shrink-0">
-        <div>
-          <h2 className="font-serif text-base">할 일</h2>
-          {remaining > 0 && (
-            <p className="text-xs text-gray-400">{remaining}개 남음</p>
-          )}
+      <div
+        className="flex items-center justify-between px-4 py-3 flex-shrink-0 cursor-pointer select-none"
+        onClick={() => setPanelOpen((v) => !v)}
+      >
+        <div className="flex items-center gap-1.5">
+          {panelOpen ? <ChevronUp size={14} className="text-[var(--text-muted)]" /> : <ChevronDown size={14} className="text-[var(--text-muted)]" />}
+          <div>
+            <h2 className="font-serif text-base">할 일</h2>
+            {remaining > 0 && (
+              <p className="text-xs text-gray-400">{remaining}개 남음</p>
+            )}
+          </div>
         </div>
         <button
-          onClick={openAdd}
+          onClick={(e) => { e.stopPropagation(); openAdd(); }}
           className="w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={{ background: "var(--point)", color: "var(--point-fg)" }}
         >
           <Plus size={16} />
         </button>
       </div>
 
+      {panelOpen && <div className="border-t border-[var(--border-subtle)]" />}
+
       {/* 리스트 */}
-      <div className="flex-1 overflow-y-auto px-3 py-2">
+      {panelOpen && <div className="flex-1 overflow-y-auto px-3 py-2">
         {loading ? (
           <div className="flex items-center justify-center h-20">
             <div className="w-5 h-5 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
@@ -248,7 +258,7 @@ export default function TodoPanel() {
             </div>
           ))
         )}
-      </div>
+      </div>}
 
       {/* 모달 */}
       <TodoModal

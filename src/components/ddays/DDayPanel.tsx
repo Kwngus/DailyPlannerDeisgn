@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, ChevronDown, ChevronUp } from "lucide-react";
 import { useDDays } from "@/lib/hooks/useDDays";
 import dayjs from "dayjs";
 import type { DDay } from "@/types";
@@ -34,6 +34,7 @@ function DDayBadge({ targetDate }: { targetDate: string }) {
 
 export default function DDayPanel() {
   const { ddays, loading, addDDay, updateDDay, deleteDDay } = useDDays();
+  const [open, setOpen] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [addTitle, setAddTitle] = useState("");
   const [addDate, setAddDate] = useState("");
@@ -64,15 +65,21 @@ export default function DDayPanel() {
   return (
     <div className="flex flex-col rounded-2xl border bg-[var(--surface)] border-[var(--border)] flex-shrink-0">
       {/* 헤더 */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)]">
-        <div>
-          <h2 className="font-serif text-base">D-Day</h2>
-          {ddays.length > 0 && (
-            <p className="text-xs text-gray-400">{ddays.length}개</p>
-          )}
+      <div
+        className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <div className="flex items-center gap-1.5">
+          {open ? <ChevronUp size={14} className="text-[var(--text-muted)]" /> : <ChevronDown size={14} className="text-[var(--text-muted)]" />}
+          <div>
+            <h2 className="font-serif text-base">D-Day</h2>
+            {ddays.length > 0 && (
+              <p className="text-xs text-gray-400">{ddays.length}개</p>
+            )}
+          </div>
         </div>
         <button
-          onClick={() => { setShowAddForm((v) => !v); setAddTitle(""); setAddDate(""); }}
+          onClick={(e) => { e.stopPropagation(); setShowAddForm((v) => !v); setAddTitle(""); setAddDate(""); }}
           className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
           style={{ background: "var(--point)", color: "var(--point-fg)" }}
         >
@@ -80,8 +87,10 @@ export default function DDayPanel() {
         </button>
       </div>
 
+      {open && <div className="border-t border-[var(--border-subtle)]" />}
+
       {/* 인라인 추가 폼 */}
-      {showAddForm && (
+      {open && showAddForm && (
         <div className="px-3 py-2.5 border-b border-[var(--border-subtle)] space-y-2">
           <input
             type="text"
@@ -112,7 +121,7 @@ export default function DDayPanel() {
       )}
 
       {/* D-Day 목록 */}
-      <div className="overflow-y-auto max-h-48 px-3 py-2 space-y-1">
+      {open && <div className="overflow-y-auto max-h-48 px-3 py-2 space-y-1">
         {loading ? (
           <div className="flex items-center justify-center h-10">
             <div className="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
@@ -173,7 +182,7 @@ export default function DDayPanel() {
             )
           )
         )}
-      </div>
+      </div>}
     </div>
   );
 }

@@ -20,6 +20,15 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
+function calcDDay(targetDate: string): { label: string; diff: number } {
+  const today = dayjs().startOf("day");
+  const target = dayjs(targetDate).startOf("day");
+  const diff = target.diff(today, "day");
+  if (diff === 0) return { label: "D-Day", diff: 0 };
+  if (diff > 0) return { label: `D-${diff}`, diff };
+  return { label: `D+${Math.abs(diff)}`, diff };
+}
+
 function nowMin() {
   const now = new Date();
   return now.getHours() * 60 + now.getMinutes();
@@ -44,6 +53,7 @@ export default function DashboardPage() {
   const [loadingEvents, setLoadingEvents] = useState(true);
   const { todos } = useTodos();
   const { habits, loading: habitsLoading, toggleHabit } = useHabits();
+  const { ddays, loading: ddaysLoading } = useDDays();
 
   const today = dayjs().format("YYYY-MM-DD");
   const todayLabel = dayjs().format("M월 D일 dddd");
@@ -359,6 +369,55 @@ export default function DashboardPage() {
                 ))}
               </div>
             </>
+          )}
+        </section>
+      )}
+
+      {/* D-Day */}
+      {(ddaysLoading || ddays.length > 0) && (
+        <section className="rounded-2xl border bg-[var(--surface)] border-[var(--border)] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)]">
+            <span className="font-serif text-base font-semibold">D-Day</span>
+            {!ddaysLoading && (
+              <span className="text-xs text-[var(--text-muted)]">{ddays.length}개</span>
+            )}
+          </div>
+
+          {ddaysLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <div className="w-5 h-5 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="px-4 py-2 space-y-1">
+              {ddays.map((dday) => {
+                const { label, diff } = calcDDay(dday.target_date);
+                const isPast = diff < 0;
+                const isToday = diff === 0;
+                return (
+                  <div
+                    key={dday.id}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all ${
+                      isPast
+                        ? "opacity-50 bg-[var(--surface)] border-[var(--border)]"
+                        : "bg-[var(--surface)] border-[var(--border)]"
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate text-[var(--text)]">{dday.title}</p>
+                      <p className="text-[10px] text-[var(--text-muted)]">
+                        {dayjs(dday.target_date).format("YYYY.MM.DD")}
+                      </p>
+                    </div>
+                    <span
+                      className="text-sm font-bold tabular-nums flex-shrink-0"
+                      style={{ color: isPast ? "var(--text-muted)" : isToday ? "var(--point)" : "var(--point)" }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </section>
       )}
