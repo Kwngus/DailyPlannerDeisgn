@@ -38,6 +38,9 @@ const TodoPanel = dynamic(() => import("@/components/todos/TodoPanel"), {
 const HabitPanel = dynamic(() => import("@/components/habits/HabitPanel"), {
   ssr: false,
 });
+const DDayPanel = dynamic(() => import("@/components/ddays/DDayPanel"), {
+  ssr: false,
+});
 const Fab = dynamic(() => import("@/components/layout/Fab"), { ssr: false });
 
 export default function AppPage() {
@@ -150,6 +153,9 @@ export default function AppPage() {
         <div className="hidden lg:flex flex-col w-72 flex-shrink-0 gap-3 min-h-0">
           <ErrorBoundary>
             <HabitPanel />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <DDayPanel />
           </ErrorBoundary>
           <ErrorBoundary>
             <div className="flex-1 min-h-0">

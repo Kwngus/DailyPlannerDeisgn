@@ -48,6 +48,15 @@ export type HabitWithDone = Habit & {
   log_id: string | null;
 };
 
+export type DDay = {
+  id: string;
+  user_id: string;
+  title: string;
+  target_date: string;
+  sort_order: number;
+  created_at: string;
+};
+
 export type Todo = {
   id: string;
   user_id: string;

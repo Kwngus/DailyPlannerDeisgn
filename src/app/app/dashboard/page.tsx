@@ -6,6 +6,7 @@ import { ChevronRight, Clock, CheckCircle2, Circle } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 import { useTodos } from "@/lib/hooks/useTodos";
 import { useHabits } from "@/lib/hooks/useHabits";
+import { useDDays } from "@/lib/hooks/useDDays";
 import { usePlannerStore } from "@/store/plannerStore";
 import { minToTime } from "@/lib/timeUtils";
 import type { Event } from "@/types";
