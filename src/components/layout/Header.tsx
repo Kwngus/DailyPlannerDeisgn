@@ -20,7 +20,7 @@ export default function Header({
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const { viewMode, currentDate, setViewMode, navigate, setCurrentDate } =
+  const { viewMode, currentDate, setViewMode, navigate, setCurrentDate, showPlanned, showActual, setShowPlanned, setShowActual } =
     usePlannerStore();
 
   function handleSetViewMode(mode: "day" | "week" | "month") {
@@ -83,6 +83,31 @@ export default function Header({
             >
               오늘
             </button>
+          )}
+
+          {/* 계획/실제 토글 — DAY 뷰에서만 표시 */}
+          {viewMode === "day" && (
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {(["planned", "actual"] as const).map((type) => {
+                const isActive = type === "planned" ? showPlanned : showActual;
+                const label = type === "planned" ? "계획" : "실제";
+                const toggle = type === "planned" ? setShowPlanned : setShowActual;
+                return (
+                  <button
+                    key={type}
+                    onClick={() => toggle(!isActive)}
+                    className="rounded-lg text-xs font-bold tracking-wide transition-colors flex-shrink-0"
+                    style={{
+                      padding: "4px 10px",
+                      background: isActive ? "var(--point)" : "rgba(120,113,108,0.12)",
+                      color: isActive ? "var(--point-fg)" : "rgba(100,95,90,0.65)",
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           )}
 
           <div className="flex items-center gap-0.5 flex-shrink-0">

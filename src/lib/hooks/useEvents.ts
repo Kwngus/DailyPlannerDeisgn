@@ -320,6 +320,71 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
     }
   }
 
+  async function getEventCountForDate(date: string): Promise<number> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return 0;
+    const { count } = await supabase
+      .from("events")
+      .select("id", { count: "exact", head: true })
+      .eq("date", date)
+      .eq("user_id", session.user.id);
+    return count ?? 0;
+  }
+
+  async function copyDayEvents(fromDate: string, toDate: string) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const { data: sourceEvents } = await supabase
+      .from("events")
+      .select("*")
+      .eq("date", fromDate)
+      .eq("user_id", session.user.id);
+
+    if (!sourceEvents || sourceEvents.length === 0) {
+      show("복사할 일정이 없어요", "error");
+      return;
+    }
+
+    const rows = sourceEvents.map((e) => ({
+      user_id: session.user.id,
+      title: e.title,
+      note: e.note,
+      location: e.location ?? null,
+      image_url: e.image_url ?? null,
+      date: toDate,
+      start_min: e.start_min,
+      end_min: e.end_min,
+      category_id: e.category_id,
+      is_note: e.is_note,
+      is_allday: e.is_allday,
+      is_cancelled: false,
+      recurrence_type: "none",
+      recurrence_days: null,
+      recurrence_end_date: null,
+      recurrence_group_id: null,
+    }));
+
+    const { data: inserted, error } = await supabase
+      .from("events")
+      .insert(rows)
+      .select("id");
+
+    if (error) { show(getErrorMessage(error), "error"); return; }
+
+    const viewDates = viewMode === "week" ? getWeekDates(currentDate) : [currentDate];
+    if (viewDates.includes(toDate)) {
+      await fetchEvents(true);
+    }
+
+    show(`${sourceEvents.length}개의 일정이 복사됐어요 ✓`, "info", async () => {
+      if (!inserted) return;
+      const ids = inserted.map((e: { id: string }) => e.id);
+      await supabase.from("events").delete().in("id", ids);
+      if (viewDates.includes(toDate)) await fetchEvents(true);
+    });
+  }
+
   return {
     events,
     loading,
@@ -328,6 +393,8 @@ export function useEvents(currentDate: string, viewMode: ViewMode) {
     moveEvent,
     deleteEvent,
     refetch: fetchEvents,
+    copyDayEvents,
+    getEventCountForDate,
   };
 }
 

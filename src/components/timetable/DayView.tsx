@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useMemo, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getHours, ROW_HEIGHT, isToday, getSegmentsForHour, getNotesForHour } from '@/lib/timeUtils';
 import { useSettingsStore } from '@/store/settingsStore';
 import EventBlock from './EventBlock';
@@ -11,6 +12,7 @@ import DragMovePreview from './DragMovePreview';
 import AllDayRow from './AllDayRow';
 import { useDragCreate } from '@/lib/hooks/useDragCreate';
 import { useDragMove } from '@/lib/hooks/useDragMove';
+import { Copy } from 'lucide-react';
 import type { Event } from '@/types';
 import dayjs from 'dayjs';
 
@@ -23,10 +25,12 @@ type Props = {
   onCellClick: (dateStr: string, hour: number) => void;
   onDragCreate?: (dateStr: string, startMin: number, endMin: number) => void;
   onMoveEvent?: (id: string, startMin: number, endMin: number) => void;
+  onCopyDay?: (toDate: string) => void;
+  label?: string;
 };
 
 export default function DayView({
-  dateStr, events, onEventClick, onCellClick, onDragCreate, onMoveEvent,
+  dateStr, events, onEventClick, onCellClick, onDragCreate, onMoveEvent, onCopyDay, label,
 }: Props) {
   const HOURS = getHours();
   const { timeFormat } = useSettingsStore();
@@ -34,6 +38,39 @@ export default function DayView({
   const regularEvents = useMemo(() => events.filter((e) => e.date === dateStr && !e.is_note && !e.is_allday), [events, dateStr]);
   const notes = useMemo(() => events.filter((e) => e.date === dateStr && e.is_note), [events, dateStr]);
   const columnRef = useRef<HTMLDivElement>(null);
+  const copyBtnRef = useRef<HTMLButtonElement>(null);
+  const [showCopyPicker, setShowCopyPicker] = useState(false);
+  const [copyTarget, setCopyTarget] = useState('');
+  const [pickerPos, setPickerPos] = useState<{ top: number; left: number } | null>(null);
+
+  function openCopyPicker() {
+    const rect = copyBtnRef.current?.getBoundingClientRect();
+    if (rect) {
+      const POPUP_WIDTH = 220;
+      const left = Math.min(rect.right - POPUP_WIDTH, window.innerWidth - POPUP_WIDTH - 8);
+      setPickerPos({ top: rect.bottom + 6, left: Math.max(8, left) });
+    }
+    setShowCopyPicker((v) => !v);
+  }
+
+  function handleCopySubmit() {
+    if (!copyTarget || !onCopyDay) return;
+    onCopyDay(copyTarget);
+    setShowCopyPicker(false);
+    setCopyTarget('');
+  }
+
+  // 팝업 외부 클릭 시 닫기
+  useEffect(() => {
+    if (!showCopyPicker) return;
+    function handleOutside(e: MouseEvent) {
+      if (copyBtnRef.current?.contains(e.target as Node)) return;
+      setShowCopyPicker(false);
+      setCopyTarget('');
+    }
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [showCopyPicker]);
 
   const { dragState, isLongPressed, onMouseDown, onMouseMove, onMouseUp, onMouseLeave, onTouchStart, onTouchMove, onTouchEnd } =
     useDragCreate((date, start, end) => {
@@ -75,8 +112,13 @@ export default function DayView({
       >
         <div />
         <div
-          className={`py-1.5 text-center border-l border-[var(--border)] ${isToday(dateStr) ? 'bg-gray-50 dark:bg-[#2C2820]' : ''}`}
+          className={`py-1.5 text-center border-l border-[var(--border)] relative ${isToday(dateStr) ? 'bg-gray-50 dark:bg-[#2C2820]' : ''}`}
         >
+          {label && (
+            <div className="text-[10px] font-bold tracking-widest uppercase mb-0.5" style={{ color: 'var(--point)' }}>
+              {label}
+            </div>
+          )}
           <div className="text-[9px] font-bold tracking-widest text-gray-400 uppercase">
             {dayjs(dateStr).format('ddd')}
           </div>
@@ -89,6 +131,58 @@ export default function DayView({
           >
             {dayjs(dateStr).date()}
           </div>
+
+          {/* 복사 버튼 — onCopyDay prop이 있을 때만 표시 */}
+          {onCopyDay && (
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <button
+                ref={copyBtnRef}
+                onClick={openCopyPicker}
+                title="이 날 일정 복사"
+                className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <Copy size={13} />
+              </button>
+            </div>
+          )}
+
+          {/* 날짜 선택 팝업 — portal로 body에 렌더링해 SwipeContainer transform 영향 차단 */}
+          {showCopyPicker && pickerPos && createPortal(
+            <div
+              className="fixed z-[200] bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-lg p-3 flex flex-col gap-2"
+              style={{ top: pickerPos.top, left: pickerPos.left, minWidth: 220 }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-xs font-semibold text-[var(--text)] whitespace-nowrap">
+                복사할 날짜 선택
+              </p>
+              <input
+                type="date"
+                value={copyTarget}
+                min={dayjs(dateStr).add(1, 'day').format('YYYY-MM-DD')}
+                onChange={(e) => setCopyTarget(e.target.value)}
+                className="text-xs border border-[var(--border)] rounded-lg px-2 py-1.5 bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
+              />
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => { setShowCopyPicker(false); setCopyTarget(''); }}
+                  className="flex-1 text-xs py-1.5 rounded-lg border border-[var(--border)] text-[var(--text-muted)] hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleCopySubmit}
+                  disabled={!copyTarget}
+                  className="flex-1 text-xs py-1.5 rounded-lg font-bold transition-colors disabled:opacity-40"
+                  style={{ background: 'var(--point)', color: 'var(--point-fg)' }}
+                >
+                  복사
+                </button>
+              </div>
+            </div>,
+            document.body
+          )}
         </div>
       </div>
 

@@ -8,6 +8,7 @@ import { useEvents } from "@/lib/hooks/useEvents";
 import { useCategories } from "@/lib/hooks/useCategories";
 import { useScrollToNow } from "@/lib/hooks/useScrollToNow";
 import { useDragSort } from "@/lib/hooks/useDragSort";
+import { useDraftEvents } from "@/lib/hooks/useDraftEvents";
 import DayViewSkeleton from "@/components/timetable/DayViewSkeleton";
 import WeekViewSkeleton from "@/components/timetable/WeekViewSkeleton";
 import MonthViewSkeleton from "@/components/timetable/MonthViewSkeleton";
@@ -45,24 +46,26 @@ const DDayPanel = dynamic(() => import("@/components/ddays/DDayPanel"), {
 const Fab = dynamic(() => import("@/components/layout/Fab"), { ssr: false });
 
 export default function AppPage() {
-  const { viewMode, currentDate, navigate, setViewMode } = usePlannerStore();
+  const { viewMode, currentDate, navigate, setViewMode, showPlanned, showActual } = usePlannerStore();
   const { defaultView } = useSettingsStore();
 
   useEffect(() => {
     setViewMode(defaultView);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const { events, loading, addEvent, updateEvent, moveEvent, deleteEvent } = useEvents(
+  const { events, loading, addEvent, updateEvent, moveEvent, deleteEvent, copyDayEvents, getEventCountForDate } = useEvents(
     currentDate,
     viewMode,
   );
   const { categories, loading: catLoading } = useCategories();
+  const { draftEvents, addDraftEvent } = useDraftEvents(currentDate, categories, addEvent);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [defaultDate, setDefaultDate] = useState(currentDate);
   const [defaultHour, setDefaultHour] = useState<number | undefined>();
   const [dragRange, setDragRange] = useState<{ startMin: number; endMin: number } | null>(null);
+  const [isDraftMode, setIsDraftMode] = useState(false);
 
   const scrollRef = useScrollToNow(viewMode !== "month" && !loading);
 
@@ -111,12 +114,44 @@ export default function AppPage() {
   }
 
   async function handleSave(payload: EventPayload, updateMode?: "single" | "future" | "all") {
-    if (selectedEvent) await updateEvent(selectedEvent.id, payload, updateMode);
-    else await addEvent(payload);
+    if (selectedEvent) {
+      await updateEvent(selectedEvent.id, payload, updateMode);
+    } else if (isDraftMode) {
+      await addDraftEvent(payload);
+    } else {
+      await addEvent(payload);
+    }
   }
 
   async function handleDelete(deleteAll: boolean = false) {
     if (selectedEvent) await deleteEvent(selectedEvent.id, deleteAll);
+  }
+
+  async function handleCopyDay(toDate: string) {
+    const count = await getEventCountForDate(toDate);
+    if (count > 0) {
+      const ok = window.confirm(`${toDate}에 이미 ${count}개의 일정이 있어요.\n그래도 추가로 복사할까요?`);
+      if (!ok) return;
+    }
+    await copyDayEvents(currentDate, toDate);
+  }
+
+  // 계획 뷰에서 이벤트 추가 시 draft로 저장 + 실제에도 복사
+  function openDraftAddModal(dateStr: string, hour: number) {
+    setSelectedEvent(null);
+    setDefaultDate(dateStr);
+    setDefaultHour(hour);
+    setIsDraftMode(true);
+    setModalOpen(true);
+  }
+
+  function openDraftDragModal(dateStr: string, startMin: number, endMin: number) {
+    setSelectedEvent(null);
+    setDefaultDate(dateStr);
+    setDefaultHour(Math.floor(startMin / 60));
+    setDragRange({ startMin, endMin });
+    setIsDraftMode(true);
+    setModalOpen(true);
   }
 
   function renderTimetable() {
@@ -130,16 +165,54 @@ export default function AppPage() {
     if (loading) {
       return viewMode === "day" ? <DayViewSkeleton /> : <WeekViewSkeleton />;
     }
-    return viewMode === "day" ? (
-      <DayView
-        dateStr={currentDate}
-        events={events}
-        onEventClick={openEditModal}
-        onCellClick={openAddModal}
-        onDragCreate={openDragModal}
-        onMoveEvent={moveEvent}
-      />
-    ) : (
+
+    // 분할 뷰 (계획 + 실제 동시)
+    if (viewMode === "day" && showPlanned && showActual) {
+      return (
+        <div className="flex gap-0 h-full">
+          <div className="flex-1 min-w-0 overflow-y-auto">
+            <DayView
+              dateStr={currentDate}
+              events={draftEvents as Event[]}
+              onEventClick={openEditModal}
+              onCellClick={openDraftAddModal}
+              onDragCreate={openDraftDragModal}
+              label="계획"
+            />
+          </div>
+          <div className="w-px bg-[var(--border)] flex-shrink-0" />
+          <div className="flex-1 min-w-0 overflow-y-auto">
+            <DayView
+              dateStr={currentDate}
+              events={events}
+              onEventClick={openEditModal}
+              onCellClick={openAddModal}
+              onDragCreate={openDragModal}
+              onMoveEvent={moveEvent}
+              onCopyDay={handleCopyDay}
+              label="실제"
+            />
+          </div>
+        </div>
+      );
+    }
+
+    if (viewMode === "day") {
+      const dayEvents = showPlanned ? (draftEvents as Event[]) : events;
+      return (
+        <DayView
+          dateStr={currentDate}
+          events={dayEvents}
+          onEventClick={openEditModal}
+          onCellClick={showPlanned ? openDraftAddModal : openAddModal}
+          onDragCreate={showPlanned ? openDraftDragModal : openDragModal}
+          onMoveEvent={showPlanned ? undefined : moveEvent}
+          onCopyDay={showPlanned ? undefined : handleCopyDay}
+        />
+      );
+    }
+
+    return (
       <WeekView
         currentDate={currentDate}
         events={events}
@@ -172,8 +245,8 @@ export default function AppPage() {
         </ErrorBoundary>
       </SwipeContainer>
 
-      {/* 사이드 패널 */}
-      {viewMode !== "month" && (
+      {/* 사이드 패널 — 분할 뷰일 때는 숨김 */}
+      {viewMode !== "month" && !(viewMode === "day" && showPlanned && showActual) && (
         <div className="hidden lg:flex flex-col w-72 flex-shrink-0 gap-3 min-h-0">
           {panelOrder.map((panel) => {
             const isTodo = panel.id === "todo";
@@ -205,13 +278,13 @@ export default function AppPage() {
         </div>
       )}
 
-      {viewMode !== "month" && (
+      {viewMode !== "month" && !(viewMode === "day" && showPlanned && showActual) && (
         <Fab onClick={() => openAddModal(currentDate, new Date().getHours())} />
       )}
 
       <EventModal
         isOpen={modalOpen}
-        onClose={() => { setModalOpen(false); setDragRange(null); }}
+        onClose={() => { setModalOpen(false); setDragRange(null); setIsDraftMode(false); }}
         onSave={handleSave}
         onDelete={selectedEvent ? handleDelete : undefined}
         categories={categories}
