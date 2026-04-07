@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { getHours, ROW_HEIGHT, isToday, getSegmentsForHour, getNotesForHour } from '@/lib/timeUtils';
 import { useSettingsStore } from '@/store/settingsStore';
 import EventBlock from './EventBlock';
@@ -35,10 +35,19 @@ export default function DayView({
   const notes = useMemo(() => events.filter((e) => e.date === dateStr && e.is_note), [events, dateStr]);
   const columnRef = useRef<HTMLDivElement>(null);
 
-  const { dragState, isLongPressed, onMouseDown, onMouseMove, onMouseUp, onMouseLeave } =
+  const { dragState, isLongPressed, onMouseDown, onMouseMove, onMouseUp, onMouseLeave, onTouchStart, onTouchMove, onTouchEnd } =
     useDragCreate((date, start, end) => {
       onDragCreate?.(date, start, end);
     });
+
+  // touchmove는 non-passive로 등록해야 long press 후 스크롤을 막을 수 있음
+  useEffect(() => {
+    const el = columnRef.current;
+    if (!el) return;
+    const handle = (e: TouchEvent) => onTouchMove(e, el);
+    el.addEventListener('touchmove', handle, { passive: false });
+    return () => el.removeEventListener('touchmove', handle);
+  }, [onTouchMove]);
 
   const { draggingId, moveState, onEventMouseDown, onMouseMove: onMoveMouseMove, onMouseUp: onMoveMouseUp, cancelDrag } =
     useDragMove((id, startMin, endMin) => {
@@ -127,6 +136,9 @@ export default function DayView({
           onMouseMove={(e) => { if (!columnRef.current) return; onMouseMove(e, columnRef.current); onMoveMouseMove(e, columnRef.current); }}
           onMouseUp={(e) => { if (!columnRef.current) return; onMouseUp(e, onCellClick, columnRef.current); onMoveMouseUp(); }}
           onMouseLeave={() => { onMouseLeave(); cancelDrag(); }}
+          onTouchStart={(e) => columnRef.current && onTouchStart(e, dateStr, columnRef.current)}
+          onTouchEnd={(e) => columnRef.current && onTouchEnd(e, onCellClick, columnRef.current)}
+          onTouchCancel={() => { onMouseLeave(); cancelDrag(); }}
         >
           {HOURS.map((h) => {
             const segs = getSegmentsForHour(regularEvents, h);

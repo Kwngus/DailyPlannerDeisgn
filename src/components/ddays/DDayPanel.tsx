@@ -1,10 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Check, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, ChevronDown, ChevronUp, GripVertical } from "lucide-react";
 import { useDDays } from "@/lib/hooks/useDDays";
 import dayjs from "dayjs";
 import type { DDay } from "@/types";
+
+type DragHandleProps = {
+  draggable: boolean;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragEnd: () => void;
+};
 
 function calcDDay(targetDate: string): string {
   const today = dayjs().startOf("day");
@@ -32,7 +38,7 @@ function DDayBadge({ targetDate }: { targetDate: string }) {
   );
 }
 
-export default function DDayPanel() {
+export default function DDayPanel({ dragHandleProps }: { dragHandleProps?: DragHandleProps }) {
   const { ddays, loading, addDDay, updateDDay, deleteDDay } = useDDays();
   const [open, setOpen] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -70,6 +76,15 @@ export default function DDayPanel() {
         onClick={() => setOpen((v) => !v)}
       >
         <div className="flex items-center gap-1.5">
+          {dragHandleProps && (
+            <div
+              {...dragHandleProps}
+              onClick={(e) => e.stopPropagation()}
+              className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+            >
+              <GripVertical size={14} />
+            </div>
+          )}
           {open ? <ChevronUp size={14} className="text-[var(--text-muted)]" /> : <ChevronDown size={14} className="text-[var(--text-muted)]" />}
           <div>
             <h2 className="font-serif text-base">D-Day</h2>

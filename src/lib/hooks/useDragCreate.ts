@@ -28,8 +28,9 @@ export function useDragCreate(
   const anchorMin = useRef(0);
   const dateStrRef = useRef("");
   const dragStateRef = useRef<DragState | null>(null);
+  // 터치 종료 후 합성 마우스 이벤트(ghost click) 무시용
+  const lastTouchEnd = useRef(0);
 
-  // dragState를 ref에도 동기화 (onMouseUp 클로저 문제 방지)
   function setDragStateSync(s: DragState | null) {
     dragStateRef.current = s;
     setDragState(s);
@@ -63,17 +64,21 @@ export function useDragCreate(
     return Math.round(min / interval) * interval;
   }
 
-  function getOffset(e: React.MouseEvent, container: HTMLDivElement) {
+  function computeOffset(clientX: number, clientY: number, container: HTMLDivElement) {
     const rect = container.getBoundingClientRect();
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top + container.scrollTop,
+      x: clientX - rect.left,
+      y: clientY - rect.top + container.scrollTop,
     };
   }
+
+  // ── Mouse handlers ──────────────────────────────────────────────────────────
 
   const onMouseDown = useCallback(
     (e: React.MouseEvent, dateStr: string, container: HTMLDivElement) => {
       if (e.button !== 0) return;
+      // 터치 종료 직후 합성 마우스 이벤트 무시 (500ms)
+      if (Date.now() - lastTouchEnd.current < 500) return;
       if ((e.target as HTMLElement).closest("[data-event-block]")) return;
 
       e.preventDefault();
@@ -83,10 +88,9 @@ export function useDragCreate(
       mouseDownPos.current = { x: e.clientX, y: e.clientY };
       dateStrRef.current = dateStr;
 
-      const { x, y } = getOffset(e, container);
+      const { x, y } = computeOffset(e.clientX, e.clientY, container);
       anchorMin.current = snap(posToMin(x, y, container.clientWidth));
 
-      // long press 타이머 시작
       longPressTimer.current = setTimeout(() => {
         longPressActive.current = true;
         setIsLongPressed(true);
@@ -103,7 +107,6 @@ export function useDragCreate(
       const dy = Math.abs(e.clientY - mouseDownPos.current.y);
 
       if (!longPressActive.current) {
-        // long press 전 — 많이 움직이면 스크롤로 간주하고 취소
         if (dx > CANCEL_MOVE_PX || dy > CANCEL_MOVE_PX) {
           clearTimer();
           isDragging.current = false;
@@ -111,11 +114,10 @@ export function useDragCreate(
         return;
       }
 
-      // long press 활성 — 드래그 처리
       if (!hasMoved.current && dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) return;
       hasMoved.current = true;
 
-      const { x, y } = getOffset(e, container);
+      const { x, y } = computeOffset(e.clientX, e.clientY, container);
       const currentMin = snap(posToMin(x, y, container.clientWidth));
 
       const startMin = Math.min(anchorMin.current, currentMin);
@@ -142,8 +144,7 @@ export function useDragCreate(
       clearTimer();
 
       if (!longPressActive.current) {
-        // 짧은 클릭 — 모달 열기
-        const { y } = getOffset(e, container);
+        const { y } = computeOffset(e.clientX, e.clientY, container);
         const rowIndex = Math.floor(y / ROW_HEIGHT);
         const hour = HOUR_START + rowIndex;
         const realHour = hour >= 24 ? hour - 24 : hour;
@@ -157,10 +158,8 @@ export function useDragCreate(
 
       const current = dragStateRef.current;
       if (hasMoved.current && current && current.endMin - current.startMin >= MIN_DURATION) {
-        // 드래그 완료 → 일정 생성
         onComplete(current.dateStr, current.startMin, current.endMin);
       } else {
-        // long press만 하고 드래그 안 함 → 클릭과 동일하게 모달 열기
         const hour = Math.floor(anchorMin.current / 60);
         onCellClick(dateStrRef.current, hour);
       }
@@ -175,5 +174,120 @@ export function useDragCreate(
     fullReset();
   }, []);
 
-  return { dragState, isLongPressed, onMouseDown, onMouseMove, onMouseUp, onMouseLeave };
+  // ── Touch handlers ──────────────────────────────────────────────────────────
+
+  const onTouchStart = useCallback(
+    (e: React.TouchEvent, dateStr: string, container: HTMLDivElement) => {
+      if ((e.target as HTMLElement).closest("[data-event-block]")) return;
+      const touch = e.touches[0];
+
+      isDragging.current = true;
+      hasMoved.current = false;
+      longPressActive.current = false;
+      mouseDownPos.current = { x: touch.clientX, y: touch.clientY };
+      dateStrRef.current = dateStr;
+
+      const { x, y } = computeOffset(touch.clientX, touch.clientY, container);
+      anchorMin.current = snap(posToMin(x, y, container.clientWidth));
+
+      longPressTimer.current = setTimeout(() => {
+        longPressActive.current = true;
+        setIsLongPressed(true);
+      }, LONG_PRESS_MS);
+    },
+    [],
+  );
+
+  // 네이티브 TouchEvent 수신 (non-passive 리스너로 등록해야 preventDefault 가능)
+  const onTouchMove = useCallback(
+    (e: TouchEvent, container: HTMLDivElement) => {
+      if (!isDragging.current) return;
+      const touch = e.touches[0];
+
+      const dx = Math.abs(touch.clientX - mouseDownPos.current.x);
+      const dy = Math.abs(touch.clientY - mouseDownPos.current.y);
+
+      if (!longPressActive.current) {
+        // long press 전 — 많이 움직이면 스크롤로 간주하고 취소
+        if (dx > CANCEL_MOVE_PX || dy > CANCEL_MOVE_PX) {
+          clearTimer();
+          isDragging.current = false;
+        }
+        return;
+      }
+
+      // long press 활성 — 스크롤 막고 드래그 처리
+      e.preventDefault();
+
+      if (!hasMoved.current && dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) return;
+      hasMoved.current = true;
+
+      const { x, y } = computeOffset(touch.clientX, touch.clientY, container);
+      const currentMin = snap(posToMin(x, y, container.clientWidth));
+
+      const startMin = Math.min(anchorMin.current, currentMin);
+      const endMin = Math.max(anchorMin.current, currentMin, startMin + MIN_DURATION);
+
+      setDragStateSync({
+        dateStr: dateStrRef.current,
+        startMin,
+        endMin,
+        isCreating: true,
+      });
+    },
+    [],
+  );
+
+  const onTouchEnd = useCallback(
+    (
+      e: React.TouchEvent,
+      onCellClick: (dateStr: string, hour: number) => void,
+      container: HTMLDivElement,
+    ) => {
+      lastTouchEnd.current = Date.now();
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      clearTimer();
+
+      const touch = e.changedTouches[0];
+
+      if (!longPressActive.current) {
+        // 짧은 탭 — 모달 열기
+        const { y } = computeOffset(touch.clientX, touch.clientY, container);
+        const rowIndex = Math.floor(y / ROW_HEIGHT);
+        const hour = HOUR_START + rowIndex;
+        const realHour = hour >= 24 ? hour - 24 : hour;
+        onCellClick(dateStrRef.current, realHour);
+        fullReset();
+        return;
+      }
+
+      longPressActive.current = false;
+      setIsLongPressed(false);
+
+      const current = dragStateRef.current;
+      if (hasMoved.current && current && current.endMin - current.startMin >= MIN_DURATION) {
+        onComplete(current.dateStr, current.startMin, current.endMin);
+      } else {
+        const hour = Math.floor(anchorMin.current / 60);
+        onCellClick(dateStrRef.current, hour);
+      }
+
+      setDragStateSync(null);
+      hasMoved.current = false;
+    },
+    [onComplete],
+  );
+
+  return {
+    dragState,
+    isLongPressed,
+    onMouseDown,
+    onMouseMove,
+    onMouseUp,
+    onMouseLeave,
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd,
+  };
 }

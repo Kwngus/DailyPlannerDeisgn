@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { getHours, ROW_HEIGHT, getWeekDates, isToday, getSegmentsForHour, getNotesForHour } from '@/lib/timeUtils';
 import { useSettingsStore } from '@/store/settingsStore';
 import EventBlock from './EventBlock';
@@ -44,10 +44,22 @@ export default function WeekView({
     return map;
   }, [events, weekDates]);
 
-  const { dragState, isLongPressed, onMouseDown, onMouseMove, onMouseUp, onMouseLeave } =
+  const { dragState, isLongPressed, onMouseDown, onMouseMove, onMouseUp, onMouseLeave, onTouchStart, onTouchMove, onTouchEnd } =
     useDragCreate((date, start, end) => {
       onDragCreate?.(date, start, end);
     });
+
+  // 각 날짜 컬럼에 non-passive touchmove 리스너 등록
+  useEffect(() => {
+    const cleanups: (() => void)[] = [];
+    colRefs.current.forEach((el) => {
+      if (!el) return;
+      const handle = (e: TouchEvent) => onTouchMove(e, el);
+      el.addEventListener('touchmove', handle, { passive: false });
+      cleanups.push(() => el.removeEventListener('touchmove', handle));
+    });
+    return () => cleanups.forEach((fn) => fn());
+  }, [weekDates, onTouchMove]);
 
   const { draggingId, moveState, onEventMouseDown, onMouseMove: onMoveMouseMove, onMouseUp: onMoveMouseUp, cancelDrag } =
     useDragMove((id, startMin, endMin) => {
@@ -128,6 +140,9 @@ export default function WeekView({
               onMouseMove={(e) => { const col = colRefs.current[di]; if (!col) return; onMouseMove(e, col); onMoveMouseMove(e, col); }}
               onMouseUp={(e) => { const col = colRefs.current[di]; if (!col) return; onMouseUp(e, onCellClick, col); onMoveMouseUp(); }}
               onMouseLeave={() => { onMouseLeave(); cancelDrag(); }}
+              onTouchStart={(e) => colRefs.current[di] && onTouchStart(e, dateStr, colRefs.current[di]!)}
+              onTouchEnd={(e) => colRefs.current[di] && onTouchEnd(e, onCellClick, colRefs.current[di]!)}
+              onTouchCancel={() => { onMouseLeave(); cancelDrag(); }}
             >
               {HOURS.map((h) => {
                 const segs = getSegmentsForHour(dayEvents, h);

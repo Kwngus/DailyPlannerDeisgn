@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, CheckCircle2, Circle, Pencil, Trash2, Check, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, CheckCircle2, Circle, Pencil, Trash2, Check, X, ChevronDown, ChevronUp, GripVertical } from "lucide-react";
 import { useHabits } from "@/lib/hooks/useHabits";
 import type { HabitWithDone } from "@/types";
 
-export default function HabitPanel() {
+type DragHandleProps = {
+  draggable: boolean;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragEnd: () => void;
+};
+
+export default function HabitPanel({ dragHandleProps }: { dragHandleProps?: DragHandleProps }) {
   const { habits, loading, toggleHabit, addHabit, updateHabit, deleteHabit } = useHabits();
   const [open, setOpen] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -45,6 +51,15 @@ export default function HabitPanel() {
         onClick={() => setOpen((v) => !v)}
       >
         <div className="flex items-center gap-1.5">
+          {dragHandleProps && (
+            <div
+              {...dragHandleProps}
+              onClick={(e) => e.stopPropagation()}
+              className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+            >
+              <GripVertical size={14} />
+            </div>
+          )}
           {open ? <ChevronUp size={14} className="text-[var(--text-muted)]" /> : <ChevronDown size={14} className="text-[var(--text-muted)]" />}
           <div>
             <h2 className="font-serif text-base">오늘의 루틴</h2>

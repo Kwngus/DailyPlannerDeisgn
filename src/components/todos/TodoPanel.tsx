@@ -14,6 +14,12 @@ import { useTodos } from "@/lib/hooks/useTodos";
 import { useCategories } from "@/lib/hooks/useCategories";
 import TodoModal from "@/components/modals/TodoModal";
 import type { Todo, Priority } from "@/types";
+
+type DragHandleProps = {
+  draggable: boolean;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragEnd: () => void;
+};
 import dayjs from "dayjs";
 import { useDragSort } from "@/lib/hooks/useDragSort";
 import { GripVertical } from "lucide-react";
@@ -79,7 +85,7 @@ function groupByDate(todos: Todo[]) {
   return groups;
 }
 
-export default function TodoPanel() {
+export default function TodoPanel({ dragHandleProps }: { dragHandleProps?: DragHandleProps }) {
   const { todos, loading, addTodo, updateTodo, deleteTodo, toggleDone, reorderTodos } =
     useTodos();
   const { categories } = useCategories();
@@ -118,6 +124,15 @@ export default function TodoPanel() {
         onClick={() => setPanelOpen((v) => !v)}
       >
         <div className="flex items-center gap-1.5">
+          {dragHandleProps && (
+            <div
+              {...dragHandleProps}
+              onClick={(e) => e.stopPropagation()}
+              className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-[var(--text-muted)] hover:text-[var(--text)] transition-colors"
+            >
+              <GripVertical size={14} />
+            </div>
+          )}
           {panelOpen ? <ChevronUp size={14} className="text-[var(--text-muted)]" /> : <ChevronDown size={14} className="text-[var(--text-muted)]" />}
           <div>
             <h2 className="font-serif text-base">할 일</h2>

@@ -7,6 +7,7 @@ import { useSettingsStore } from "@/store/settingsStore";
 import { useEvents } from "@/lib/hooks/useEvents";
 import { useCategories } from "@/lib/hooks/useCategories";
 import { useScrollToNow } from "@/lib/hooks/useScrollToNow";
+import { useDragSort } from "@/lib/hooks/useDragSort";
 import DayViewSkeleton from "@/components/timetable/DayViewSkeleton";
 import WeekViewSkeleton from "@/components/timetable/WeekViewSkeleton";
 import MonthViewSkeleton from "@/components/timetable/MonthViewSkeleton";
@@ -64,6 +65,29 @@ export default function AppPage() {
   const [dragRange, setDragRange] = useState<{ startMin: number; endMin: number } | null>(null);
 
   const scrollRef = useScrollToNow(viewMode !== "month" && !loading);
+
+  type PanelItem = { id: "habit" | "dday" | "todo" };
+  const DEFAULT_ORDER: PanelItem[] = [{ id: "habit" }, { id: "dday" }, { id: "todo" }];
+
+  const [panelOrder, setPanelOrder] = useState<PanelItem[]>(() => {
+    try {
+      const saved = localStorage.getItem("sidebar-panel-order");
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return DEFAULT_ORDER;
+  });
+
+  const {
+    draggingId: panelDraggingId,
+    overId: panelOverId,
+    handleDragStart: panelDragStart,
+    handleDragOver: panelDragOver,
+    handleDrop: panelDrop,
+    handleDragEnd: panelDragEnd,
+  } = useDragSort(panelOrder, (newOrder) => {
+    setPanelOrder(newOrder);
+    localStorage.setItem("sidebar-panel-order", JSON.stringify(newOrder));
+  });
 
   function openAddModal(dateStr: string, hour: number) {
     setSelectedEvent(null);
@@ -151,17 +175,33 @@ export default function AppPage() {
       {/* 사이드 패널 */}
       {viewMode !== "month" && (
         <div className="hidden lg:flex flex-col w-72 flex-shrink-0 gap-3 min-h-0">
-          <ErrorBoundary>
-            <HabitPanel />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <DDayPanel />
-          </ErrorBoundary>
-          <ErrorBoundary>
-            <div className="flex-1 min-h-0">
-              {catLoading ? <TodoPanelSkeleton /> : <TodoPanel />}
-            </div>
-          </ErrorBoundary>
+          {panelOrder.map((panel) => {
+            const isTodo = panel.id === "todo";
+            const dragHandleProps = {
+              draggable: true as const,
+              onDragStart: (e: React.DragEvent) => { e.stopPropagation(); panelDragStart(panel); },
+              onDragEnd: panelDragEnd,
+            };
+            return (
+              <div
+                key={panel.id}
+                data-todo-id={panel.id}
+                className={`${isTodo ? "flex-1 min-h-0" : ""} transition-opacity ${
+                  panelDraggingId === panel.id ? "opacity-40" : ""
+                } ${panelOverId === panel.id && panelDraggingId !== panel.id ? "ring-2 ring-[var(--accent)] rounded-2xl" : ""}`}
+                onDragOver={(e) => panelDragOver(e, panel.id)}
+                onDrop={() => panelDrop(panel.id)}
+              >
+                <ErrorBoundary>
+                  {panel.id === "habit" && <HabitPanel dragHandleProps={dragHandleProps} />}
+                  {panel.id === "dday" && <DDayPanel dragHandleProps={dragHandleProps} />}
+                  {panel.id === "todo" && (
+                    catLoading ? <TodoPanelSkeleton /> : <TodoPanel dragHandleProps={dragHandleProps} />
+                  )}
+                </ErrorBoundary>
+              </div>
+            );
+          })}
         </div>
       )}
 
